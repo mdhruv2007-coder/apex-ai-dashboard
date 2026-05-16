@@ -1,1930 +1,2403 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>APEX.AI — Battery Intelligence Platform</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<style>
-/* ============================================================
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APEX.AI — Battery Intelligence Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ============================================================
    DESIGN SYSTEM — APEX.AI Industrial Dark
    Tone: Race-pit telemetry. Black-on-carbon. Amber threat signals.
    ============================================================ */
-:root {
-  --bg-void:     #050608;
-  --bg-panel:    #0a0c10;
-  --bg-card:     #0f1218;
-  --bg-raised:   #141820;
-  --bg-hover:    #1a2030;
+    :root {
+      --bg-void: #050608;
+      --bg-panel: #0a0c10;
+      --bg-card: #0f1218;
+      --bg-raised: #141820;
+      --bg-hover: #1a2030;
 
-  --border:      #1e2535;
-  --border-dim:  #141a24;
-  --border-glow: #2a3550;
+      --border: #1e2535;
+      --border-dim: #141a24;
+      --border-glow: #2a3550;
 
-  --text-primary:   #e8edf8;
-  --text-secondary: #8090b0;
-  --text-dim:       #3a4560;
-  --text-mono:      #5a7090;
+      --text-primary: #e8edf8;
+      --text-secondary: #8090b0;
+      --text-dim: #3a4560;
+      --text-mono: #5a7090;
 
-  --green:       #00e676;
-  --green-dim:   #004d25;
-  --green-glow:  rgba(0,230,118,0.15);
+      --green: #00e676;
+      --green-dim: #004d25;
+      --green-glow: rgba(0, 230, 118, 0.15);
 
-  --amber:       #ffab00;
-  --amber-dim:   #4a3000;
-  --amber-glow:  rgba(255,171,0,0.15);
+      --amber: #ffab00;
+      --amber-dim: #4a3000;
+      --amber-glow: rgba(255, 171, 0, 0.15);
 
-  --red:         #ff3d3d;
-  --red-dim:     #4d0000;
-  --red-glow:    rgba(255,61,61,0.15);
+      --red: #ff3d3d;
+      --red-dim: #4d0000;
+      --red-glow: rgba(255, 61, 61, 0.15);
 
-  --abort:       #ff00ff;
-  --abort-dim:   #3d003d;
-  --abort-glow:  rgba(255,0,255,0.18);
+      --abort: #ff00ff;
+      --abort-dim: #3d003d;
+      --abort-glow: rgba(255, 0, 255, 0.18);
 
-  --blue:        #2979ff;
-  --blue-dim:    #001a4d;
-  --blue-glow:   rgba(41,121,255,0.12);
+      --blue: #2979ff;
+      --blue-dim: #001a4d;
+      --blue-glow: rgba(41, 121, 255, 0.12);
 
-  --cyan:        #00e5ff;
-  --cyan-dim:    #00293d;
+      --cyan: #00e5ff;
+      --cyan-dim: #00293d;
 
-  --accent:      #ffab00;
-  --radius:      4px;
-  --radius-lg:   8px;
-}
+      --accent: #ffab00;
+      --radius: 4px;
+      --radius-lg: 8px;
+    }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-html { font-size: 13px; }
+    html {
+      font-size: 13px;
+    }
 
-body {
-  background: var(--bg-void);
-  color: var(--text-primary);
-  font-family: 'Syne', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+    body {
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-/* ── Scanline texture overlay ── */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.06) 2px,
-    rgba(0,0,0,0.06) 4px
-  );
-  pointer-events: none;
-  z-index: 9999;
-}
+    /* ── Scanline texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.06) 2px,
+          rgba(0, 0, 0, 0.06) 4px);
+      pointer-events: none;
+      z-index: 9999;
+    }
 
-/* ── LAYOUT ── */
-.shell {
-  display: grid;
-  grid-template-rows: 54px 1fr;
-  grid-template-columns: 260px 1fr;
-  min-height: 100vh;
-}
+    /* ── LAYOUT ── */
+    .shell {
+      display: grid;
+      grid-template-rows: 54px 1fr;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
 
-/* ── TOPBAR ── */
-.topbar {
-  grid-column: 1 / -1;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 20px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
+    /* ── TOPBAR ── */
+    .topbar {
+      grid-column: 1 / -1;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-}
-.logo-mark {
-  width: 28px; height: 28px;
-  background: var(--amber);
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 700; color: var(--bg-void);
-  font-family: 'Space Mono', monospace;
-  animation: pulse-hex 3s ease-in-out infinite;
-}
-@keyframes pulse-hex {
-  0%,100% { box-shadow: 0 0 0 0 rgba(255,171,0,0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(255,171,0,0); }
-}
-.logo-text {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 15px;
-  color: var(--text-primary);
-  letter-spacing: 0.05em;
-}
-.logo-sub {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  color: var(--amber);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  display: block;
-  line-height: 1;
-}
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
 
-.topbar-sep { width: 1px; height: 28px; background: var(--border); }
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      background: var(--amber);
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--bg-void);
+      font-family: 'Space Mono', monospace;
+      animation: pulse-hex 3s ease-in-out infinite;
+    }
 
-.topbar-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  color: var(--text-secondary);
-}
-.status-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--text-dim);
-  transition: background 0.3s, box-shadow 0.3s;
-}
-.status-dot.live {
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
-  animation: blink 1.4s ease-in-out infinite;
-}
-.status-dot.error { background: var(--red); box-shadow: 0 0 6px var(--red); }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes pulse-hex {
 
-.topbar-spacer { flex: 1; }
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 171, 0, 0.4);
+      }
 
-.topbar-clock {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  color: var(--text-secondary);
-  letter-spacing: 0.08em;
-}
+      50% {
+        box-shadow: 0 0 0 6px rgba(255, 171, 0, 0);
+      }
+    }
 
-.topbar-connection {
-  display: flex; align-items: center; gap: 8px;
-}
-.topbar-input {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  padding: 5px 10px;
-  border-radius: var(--radius);
-  outline: none;
-  width: 220px;
-  transition: border-color 0.2s;
-}
-.topbar-input:focus { border-color: var(--blue); }
-.topbar-input::placeholder { color: var(--text-dim); }
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--text-primary);
+      letter-spacing: 0.05em;
+    }
 
-.btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px;
-  border: none; border-radius: var(--radius);
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-transform: uppercase;
-}
-.btn-primary {
-  background: var(--amber);
-  color: var(--bg-void);
-}
-.btn-primary:hover { background: #ffc233; transform: translateY(-1px); }
-.btn-primary:active { transform: translateY(0); }
-.btn-ghost {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-}
-.btn-ghost:hover { border-color: var(--border-glow); color: var(--text-primary); }
-.btn-danger {
-  background: var(--red-dim);
-  color: var(--red);
-  border: 1px solid var(--red-dim);
-}
-.btn-danger:hover { background: rgba(255,61,61,0.2); }
+    .logo-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--amber);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: block;
+      line-height: 1;
+    }
 
-/* ── SIDEBAR ── */
-.sidebar {
-  background: var(--bg-panel);
-  border-right: 1px solid var(--border);
-  padding: 16px 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
+    .topbar-sep {
+      width: 1px;
+      height: 28px;
+      background: var(--border);
+    }
 
-.sidebar-section {
-  padding: 0 12px 8px;
-}
-.sidebar-label {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  padding: 12px 8px 6px;
-}
-.sidebar-divider {
-  height: 1px;
-  background: var(--border-dim);
-  margin: 8px 12px;
-}
+    .topbar-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
 
-/* ── INPUT PANEL WITHIN SIDEBAR ── */
-.param-group { display: flex; flex-direction: column; gap: 4px; }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
 
-.param-row {
-  display: flex; align-items: center;
-  gap: 0;
-  padding: 6px 8px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border-dim);
-  background: var(--bg-card);
-  transition: border-color 0.2s;
-  cursor: default;
-}
-.param-row:focus-within { border-color: var(--border-glow); }
+    .status-dot.live {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: blink 1.4s ease-in-out infinite;
+    }
 
-.param-symbol {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  color: var(--amber);
-  width: 36px;
-  flex-shrink: 0;
-  letter-spacing: 0.05em;
-}
-.param-name {
-  font-size: 10px;
-  color: var(--text-secondary);
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.param-input {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-primary);
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  text-align: right;
-  width: 52px;
-  padding: 0;
-}
-.param-unit {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  color: var(--text-dim);
-  margin-left: 3px;
-  width: 22px;
-  flex-shrink: 0;
-}
+    .status-dot.error {
+      background: var(--red);
+      box-shadow: 0 0 6px var(--red);
+    }
 
-.slider-row { padding: 2px 8px 4px; }
-input[type="range"] {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  background: var(--amber);
-  cursor: pointer;
-  box-shadow: 0 0 4px rgba(255,171,0,0.5);
-  transition: box-shadow 0.15s;
-}
-input[type="range"]::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 8px rgba(255,171,0,0.8);
-}
+    @keyframes blink {
 
-/* Scenario presets */
-.preset-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 0 8px;
-}
-.preset-btn {
-  padding: 6px 4px;
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.05em;
-  text-align: center;
-  border-radius: var(--radius);
-  cursor: pointer;
-  border: 1px solid;
-  transition: all 0.15s;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-.preset-normal { background: var(--green-dim); border-color: #006830; color: var(--green); }
-.preset-normal:hover { background: rgba(0,230,118,0.2); }
-.preset-amber { background: var(--amber-dim); border-color: #7a5000; color: var(--amber); }
-.preset-amber:hover { background: rgba(255,171,0,0.2); }
-.preset-red { background: var(--red-dim); border-color: #8a0000; color: var(--red); }
-.preset-red:hover { background: rgba(255,61,61,0.2); }
-.preset-abort { background: var(--abort-dim); border-color: #8a008a; color: var(--abort); }
-.preset-abort:hover { background: rgba(255,0,255,0.2); }
-.preset-aged { background: var(--blue-dim); border-color: #003080; color: #6699ff; }
-.preset-aged:hover { background: rgba(41,121,255,0.2); }
-.preset-eol { background: var(--cyan-dim); border-color: #005070; color: var(--cyan); }
-.preset-eol:hover { background: rgba(0,229,255,0.2); }
+      0%,
+      100% {
+        opacity: 1
+      }
 
-/* API key row */
-.api-key-row {
-  display: flex; gap: 6px; padding: 0 8px;
-}
-.api-key-input {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  padding: 6px 8px;
-  border-radius: var(--radius);
-  outline: none;
-  flex: 1;
-  transition: border-color 0.2s;
-}
-.api-key-input:focus { border-color: var(--amber); }
-.api-key-input::placeholder { color: var(--text-dim); }
+      50% {
+        opacity: 0.4
+      }
+    }
 
-/* Run button */
-.run-btn-wrap { padding: 8px; }
-.run-btn {
-  width: 100%;
-  padding: 10px;
-  background: var(--amber);
-  color: var(--bg-void);
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.run-btn:hover { background: #ffc233; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,171,0,0.3); }
-.run-btn:active { transform: translateY(0); box-shadow: none; }
-.run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .topbar-spacer {
+      flex: 1;
+    }
 
-/* Auto-poll toggle */
-.poll-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 8px;
-}
-.poll-label { font-size: 10px; color: var(--text-secondary); }
-.toggle {
-  position: relative; width: 34px; height: 18px;
-}
-.toggle input { opacity: 0; width: 0; height: 0; }
-.toggle-track {
-  position: absolute; inset: 0;
-  background: var(--border);
-  border-radius: 9px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.toggle input:checked + .toggle-track { background: var(--amber); }
-.toggle-track::after {
-  content: '';
-  position: absolute;
-  top: 2px; left: 2px;
-  width: 14px; height: 14px;
-  background: white;
-  border-radius: 50%;
-  transition: left 0.2s;
-}
-.toggle input:checked + .toggle-track::after { left: 18px; }
+    .topbar-clock {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+      letter-spacing: 0.08em;
+    }
 
-/* ── MAIN CONTENT ── */
-.main {
-  overflow-y: auto;
-  background: var(--bg-void);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+    .topbar-connection {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-/* ── ALERT BANNER ── */
-.alert-banner {
-  border-radius: var(--radius-lg);
-  padding: 0;
-  overflow: hidden;
-  display: none;
-  animation: slideDown 0.3s ease;
-}
-.alert-banner.visible { display: flex; }
-@keyframes slideDown { from { transform: translateY(-8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .topbar-input {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      padding: 5px 10px;
+      border-radius: var(--radius);
+      outline: none;
+      width: 220px;
+      transition: border-color 0.2s;
+    }
 
-.alert-banner-inner {
-  width: 100%;
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px;
-  position: relative;
-  overflow: hidden;
-}
-.alert-banner-inner::before {
-  content: '';
-  position: absolute; inset: 0;
-  opacity: 0.08;
-  animation: sweep 2s linear infinite;
-  background: linear-gradient(90deg, transparent, white, transparent);
-}
-@keyframes sweep { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
+    .topbar-input:focus {
+      border-color: var(--blue);
+    }
 
-.alert-icon {
-  font-size: 18px;
-  animation: alertPulse 0.8s ease-in-out infinite;
-  flex-shrink: 0;
-}
-@keyframes alertPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+    .topbar-input::placeholder {
+      color: var(--text-dim);
+    }
 
-.alert-body { flex: 1; }
-.alert-level {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.alert-msg { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+    }
 
-.alert-ts {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  opacity: 0.6;
-  flex-shrink: 0;
-}
+    .btn-primary {
+      background: var(--amber);
+      color: var(--bg-void);
+    }
 
-/* ── KPI STRIP ── */
-.kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-}
+    .btn-primary:hover {
+      background: #ffc233;
+      transform: translateY(-1px);
+    }
 
-.kpi {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 12px 14px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.3s;
-}
-.kpi::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--kpi-color, var(--text-dim));
-  opacity: 0.7;
-  transition: background 0.3s;
-}
-.kpi-label {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 6px;
-}
-.kpi-value {
-  font-family: 'Space Mono', monospace;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--kpi-color, var(--text-primary));
-  line-height: 1;
-  transition: color 0.3s;
-}
-.kpi-unit {
-  font-size: 10px;
-  color: var(--text-secondary);
-  margin-top: 3px;
-  font-family: 'Space Mono', monospace;
-}
-.kpi-delta {
-  position: absolute; top: 10px; right: 10px;
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  color: var(--text-dim);
-  letter-spacing: 0.05em;
-}
+    .btn-primary:active {
+      transform: translateY(0);
+    }
 
-/* ── GAUGE ROW ── */
-.gauge-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
-}
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
 
-.gauge-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-.gauge-card.alert-glow { box-shadow: 0 0 24px var(--glow-color, transparent); }
+    .btn-ghost:hover {
+      border-color: var(--border-glow);
+      color: var(--text-primary);
+    }
 
-.gauge-title {
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  align-self: flex-start;
-  width: 100%;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.gauge-badge {
-  font-size: 9px;
-  padding: 2px 7px;
-  border-radius: 20px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
+    .btn-danger {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid var(--red-dim);
+    }
 
-.gauge-canvas-wrap {
-  position: relative;
-  width: 180px; height: 120px;
-}
-.gauge-canvas-wrap canvas { position: absolute; top: 0; left: 0; }
-.gauge-center {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, 0%);
-  text-align: center;
-  pointer-events: none;
-}
-.gauge-big-val {
-  font-family: 'Space Mono', monospace;
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1;
-  transition: color 0.3s;
-}
-.gauge-big-unit {
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  color: var(--text-secondary);
-}
+    .btn-danger:hover {
+      background: rgba(255, 61, 61, 0.2);
+    }
 
-/* TR Risk levels */
-.level-green  { color: var(--green);  background: var(--green-dim); border: 1px solid #006830; }
-.level-amber  { color: var(--amber);  background: var(--amber-dim); border: 1px solid #7a5000; }
-.level-red    { color: var(--red);    background: var(--red-dim);   border: 1px solid #8a0000; }
-.level-abort  { color: var(--abort);  background: var(--abort-dim); border: 1px solid #8a008a; }
+    /* ── SIDEBAR ── */
+    .sidebar {
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
 
-/* SOH bar */
-.soh-bar-wrap {
-  width: 100%;
-  height: 28px;
-  background: var(--bg-raised);
-  border-radius: 4px;
-  overflow: hidden;
-  position: relative;
-  border: 1px solid var(--border-dim);
-}
-.soh-bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.7s cubic-bezier(0.4,0,0.2,1), background 0.5s;
-  position: relative;
-  overflow: hidden;
-}
-.soh-bar-fill::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
-  animation: shimmer 2s infinite;
-}
-@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
-.soh-bar-label {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.85);
-  pointer-events: none;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-}
-.soh-thresholds {
-  display: flex; justify-content: space-between;
-  width: 100%;
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  color: var(--text-dim);
-  padding-top: 3px;
-}
+    .sidebar-section {
+      padding: 0 12px 8px;
+    }
 
-/* EOL bar */
-.eol-strip {
-  width: 100%; display: flex; flex-direction: column; gap: 4px;
-}
-.eol-row { display: flex; align-items: center; gap: 8px; }
-.eol-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-secondary); width: 80px; flex-shrink:0; }
-.eol-bar-wrap { flex:1; height: 8px; background: var(--bg-raised); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-dim); }
-.eol-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s; }
-.eol-val { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-primary); width: 50px; text-align: right; flex-shrink:0; }
+    .sidebar-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 12px 8px 6px;
+    }
 
-/* ── METRICS GRID ── */
-.metrics-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
-}
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border-dim);
+      margin: 8px 12px;
+    }
 
-.metric-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px;
-}
-.metric-card-title {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.metric-chart-wrap { height: 100px; position: relative; }
+    /* ── INPUT PANEL WITHIN SIDEBAR ── */
+    .param-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
-/* ── DATA TABLE ── */
-.log-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-.log-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.log-title {
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-.log-count {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  color: var(--text-dim);
-  background: var(--bg-raised);
-  padding: 2px 8px;
-  border-radius: 20px;
-}
+    .param-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 6px 8px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-dim);
+      background: var(--bg-card);
+      transition: border-color 0.2s;
+      cursor: default;
+    }
 
-.log-table-wrap { overflow-x: auto; }
-.log-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-}
-.log-table th {
-  background: var(--bg-raised);
-  color: var(--text-dim);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 8px 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  font-weight: 400;
-  white-space: nowrap;
-}
-.log-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-dim);
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-.log-table tr:last-child td { border-bottom: none; }
-.log-table tr:hover td { background: var(--bg-raised); }
-.log-table td:first-child { color: var(--text-dim); font-size: 9px; }
-.log-table .td-val { color: var(--text-primary); font-weight: 700; }
-.log-table .td-green { color: var(--green); }
-.log-table .td-amber { color: var(--amber); }
-.log-table .td-red   { color: var(--red);   }
-.log-table .td-abort { color: var(--abort); }
+    .param-row:focus-within {
+      border-color: var(--border-glow);
+    }
 
-.log-empty {
-  padding: 32px;
-  text-align: center;
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  color: var(--text-dim);
-}
+    .param-symbol {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--amber);
+      width: 36px;
+      flex-shrink: 0;
+      letter-spacing: 0.05em;
+    }
 
-/* ── FEATURE DETAIL CARDS ── */
-.detail-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.detail-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px;
-}
-.detail-title {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-}
+    .param-name {
+      font-size: 10px;
+      color: var(--text-secondary);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-.stat-list { display: flex; flex-direction: column; gap: 6px; }
-.stat-item {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  background: var(--bg-raised);
-  border-radius: var(--radius);
-  border: 1px solid var(--border-dim);
-}
-.stat-key {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.stat-val {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
+    .param-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: right;
+      width: 52px;
+      padding: 0;
+    }
 
-/* confidence bar */
-.conf-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; width: 100%; margin-top: 6px; }
-.conf-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+    .param-unit {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-left: 3px;
+      width: 22px;
+      flex-shrink: 0;
+    }
 
-/* ── FOOTER STATUS BAR ── */
-.footer-bar {
-  grid-column: 2;
-  position: sticky; bottom: 0;
-  background: var(--bg-panel);
-  border-top: 1px solid var(--border);
-  padding: 6px 16px;
-  display: flex; align-items: center; gap: 16px;
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  color: var(--text-dim);
-  margin-top: auto;
-  letter-spacing: 0.06em;
-}
-.footer-item { display: flex; align-items: center; gap: 5px; }
-.footer-sep { width: 1px; height: 12px; background: var(--border-dim); }
+    .slider-row {
+      padding: 2px 8px 4px;
+    }
 
-/* ── LOADING SHIMMER ── */
-.loading-overlay {
-  position: fixed; inset: 0;
-  background: rgba(5,6,8,0.8);
-  backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.2s;
-}
-.loading-overlay.active { opacity: 1; pointer-events: all; }
-.loading-spinner {
-  width: 40px; height: 40px;
-  border: 3px solid var(--border);
-  border-top-color: var(--amber);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
 
-/* ── ERROR TOAST ── */
-.toast {
-  position: fixed; bottom: 24px; right: 24px;
-  background: var(--bg-raised);
-  border: 1px solid var(--red);
-  border-radius: var(--radius-lg);
-  padding: 12px 16px;
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  color: var(--red);
-  max-width: 320px;
-  z-index: 200;
-  transform: translateY(80px); opacity: 0;
-  transition: all 0.3s;
-}
-.toast.visible { transform: translateY(0); opacity: 1; }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--amber);
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(255, 171, 0, 0.5);
+      transition: box-shadow 0.15s;
+    }
 
-/* ── RESPONSIVE TWEAKS ── */
-@media (max-width: 1200px) {
-  .kpi-strip { grid-template-columns: repeat(3,1fr); }
-  .gauge-row, .metrics-row, .detail-row { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 900px) {
-  .shell { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
-  .kpi-strip { grid-template-columns: repeat(2,1fr); }
-  .gauge-row, .metrics-row, .detail-row { grid-template-columns: 1fr; }
-}
+    input[type="range"]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 8px rgba(255, 171, 0, 0.8);
+    }
 
-/* ── MODEL VERSION TAG ── */
-.version-pill {
-  font-family: 'Space Mono', monospace;
-  font-size: 8px;
-  letter-spacing: 0.08em;
-  padding: 2px 6px;
-  border-radius: 3px;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-</style>
+    /* Scenario presets */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 0 8px;
+    }
+
+    .preset-btn {
+      padding: 6px 4px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-align: center;
+      border-radius: var(--radius);
+      cursor: pointer;
+      border: 1px solid;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .preset-normal {
+      background: var(--green-dim);
+      border-color: #006830;
+      color: var(--green);
+    }
+
+    .preset-normal:hover {
+      background: rgba(0, 230, 118, 0.2);
+    }
+
+    .preset-amber {
+      background: var(--amber-dim);
+      border-color: #7a5000;
+      color: var(--amber);
+    }
+
+    .preset-amber:hover {
+      background: rgba(255, 171, 0, 0.2);
+    }
+
+    .preset-red {
+      background: var(--red-dim);
+      border-color: #8a0000;
+      color: var(--red);
+    }
+
+    .preset-red:hover {
+      background: rgba(255, 61, 61, 0.2);
+    }
+
+    .preset-abort {
+      background: var(--abort-dim);
+      border-color: #8a008a;
+      color: var(--abort);
+    }
+
+    .preset-abort:hover {
+      background: rgba(255, 0, 255, 0.2);
+    }
+
+    .preset-aged {
+      background: var(--blue-dim);
+      border-color: #003080;
+      color: #6699ff;
+    }
+
+    .preset-aged:hover {
+      background: rgba(41, 121, 255, 0.2);
+    }
+
+    .preset-eol {
+      background: var(--cyan-dim);
+      border-color: #005070;
+      color: var(--cyan);
+    }
+
+    .preset-eol:hover {
+      background: rgba(0, 229, 255, 0.2);
+    }
+
+    /* API key row */
+    .api-key-row {
+      display: flex;
+      gap: 6px;
+      padding: 0 8px;
+    }
+
+    .api-key-input {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      padding: 6px 8px;
+      border-radius: var(--radius);
+      outline: none;
+      flex: 1;
+      transition: border-color 0.2s;
+    }
+
+    .api-key-input:focus {
+      border-color: var(--amber);
+    }
+
+    .api-key-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* Run button */
+    .run-btn-wrap {
+      padding: 8px;
+    }
+
+    .run-btn {
+      width: 100%;
+      padding: 10px;
+      background: var(--amber);
+      color: var(--bg-void);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .run-btn:hover {
+      background: #ffc233;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(255, 171, 0, 0.3);
+    }
+
+    .run-btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .run-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Auto-poll toggle */
+    .poll-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+    }
+
+    .poll-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .toggle {
+      position: relative;
+      width: 34px;
+      height: 18px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle input:checked+.toggle-track {
+      background: var(--amber);
+    }
+
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: white;
+      border-radius: 50%;
+      transition: left 0.2s;
+    }
+
+    .toggle input:checked+.toggle-track::after {
+      left: 18px;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      overflow-y: auto;
+      background: var(--bg-void);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── ALERT BANNER ── */
+    .alert-banner {
+      border-radius: var(--radius-lg);
+      padding: 0;
+      overflow: hidden;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+
+    .alert-banner.visible {
+      display: flex;
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-8px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .alert-banner-inner {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .alert-banner-inner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.08;
+      animation: sweep 2s linear infinite;
+      background: linear-gradient(90deg, transparent, white, transparent);
+    }
+
+    @keyframes sweep {
+      from {
+        transform: translateX(-100%)
+      }
+
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    .alert-icon {
+      font-size: 18px;
+      animation: alertPulse 0.8s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes alertPulse {
+
+      0%,
+      100% {
+        transform: scale(1)
+      }
+
+      50% {
+        transform: scale(1.15)
+      }
+    }
+
+    .alert-body {
+      flex: 1;
+    }
+
+    .alert-level {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .alert-msg {
+      font-size: 11px;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .alert-ts {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+
+    /* ── KPI STRIP ── */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+
+    .kpi {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .kpi::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--kpi-color, var(--text-dim));
+      opacity: 0.7;
+      transition: background 0.3s;
+    }
+
+    .kpi-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--kpi-color, var(--text-primary));
+      line-height: 1;
+      transition: color 0.3s;
+    }
+
+    .kpi-unit {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .kpi-delta {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── GAUGE ROW ── */
+    .gauge-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    .gauge-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .gauge-card.alert-glow {
+      box-shadow: 0 0 24px var(--glow-color, transparent);
+    }
+
+    .gauge-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      align-self: flex-start;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .gauge-badge {
+      font-size: 9px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+
+    .gauge-canvas-wrap {
+      position: relative;
+      width: 180px;
+      height: 120px;
+    }
+
+    .gauge-canvas-wrap canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .gauge-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, 0%);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .gauge-big-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1;
+      transition: color 0.3s;
+    }
+
+    .gauge-big-unit {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    /* TR Risk levels */
+    .level-green {
+      color: var(--green);
+      background: var(--green-dim);
+      border: 1px solid #006830;
+    }
+
+    .level-amber {
+      color: var(--amber);
+      background: var(--amber-dim);
+      border: 1px solid #7a5000;
+    }
+
+    .level-red {
+      color: var(--red);
+      background: var(--red-dim);
+      border: 1px solid #8a0000;
+    }
+
+    .level-abort {
+      color: var(--abort);
+      background: var(--abort-dim);
+      border: 1px solid #8a008a;
+    }
+
+    /* SOH bar */
+    .soh-bar-wrap {
+      width: 100%;
+      height: 28px;
+      background: var(--bg-raised);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border-dim);
+    }
+
+    .soh-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .soh-bar-fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.12) 50%, transparent 100%);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%)
+      }
+
+      100% {
+        transform: translateX(100%)
+      }
+    }
+
+    .soh-bar-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.85);
+      pointer-events: none;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .soh-thresholds {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      padding-top: 3px;
+    }
+
+    /* EOL bar */
+    .eol-strip {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .eol-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .eol-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-secondary);
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .eol-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: var(--bg-raised);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border-dim);
+    }
+
+    .eol-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s;
+    }
+
+    .eol-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-primary);
+      width: 50px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── METRICS GRID ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+    }
+
+    .metric-card-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .metric-chart-wrap {
+      height: 100px;
+      position: relative;
+    }
+
+    /* ── DATA TABLE ── */
+    .log-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .log-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .log-count {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      background: var(--bg-raised);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .log-table-wrap {
+      overflow-x: auto;
+    }
+
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+    }
+
+    .log-table th {
+      background: var(--bg-raised);
+      color: var(--text-dim);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .log-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-dim);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .log-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .log-table tr:hover td {
+      background: var(--bg-raised);
+    }
+
+    .log-table td:first-child {
+      color: var(--text-dim);
+      font-size: 9px;
+    }
+
+    .log-table .td-val {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .log-table .td-green {
+      color: var(--green);
+    }
+
+    .log-table .td-amber {
+      color: var(--amber);
+    }
+
+    .log-table .td-red {
+      color: var(--red);
+    }
+
+    .log-table .td-abort {
+      color: var(--abort);
+    }
+
+    .log-empty {
+      padding: 32px;
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* ── FEATURE DETAIL CARDS ── */
+    .detail-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .detail-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+    }
+
+    .detail-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .stat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: var(--bg-raised);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-dim);
+    }
+
+    .stat-key {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .stat-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* confidence bar */
+    .conf-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .conf-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.5s;
+    }
+
+    /* ── FOOTER STATUS BAR ── */
+    .footer-bar {
+      grid-column: 2;
+      position: sticky;
+      bottom: 0;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-top: auto;
+      letter-spacing: 0.06em;
+    }
+
+    .footer-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .footer-sep {
+      width: 1px;
+      height: 12px;
+      background: var(--border-dim);
+    }
+
+    /* ── LOADING SHIMMER ── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 6, 8, 0.8);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── ERROR TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-raised);
+      border: 1px solid var(--red);
+      border-radius: var(--radius-lg);
+      padding: 12px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--red);
+      max-width: 320px;
+      z-index: 200;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .toast.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* ── RESPONSIVE TWEAKS ── */
+    @media (max-width: 1200px) {
+      .kpi-strip {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .gauge-row,
+      .metrics-row,
+      .detail-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .kpi-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .gauge-row,
+      .metrics-row,
+      .detail-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── MODEL VERSION TAG ── */
+    .version-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 0.08em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+  </style>
 </head>
 
 <body>
-<div class="shell">
+  <div class="shell">
 
-<!-- ══════════════════════════════════════════════════════════
+    <!-- ══════════════════════════════════════════════════════════
      TOPBAR
 ═════════════════════════════════════════════════════════════ -->
-<header class="topbar">
-  <a class="logo" href="#">
-    <div class="logo-mark">⬡</div>
-    <div>
-      <span class="logo-text">APEX.AI</span>
-      <span class="logo-sub">Battery Intelligence</span>
-    </div>
-  </a>
+    <header class="topbar">
+      <a class="logo" href="#">
+        <div class="logo-mark">⬡</div>
+        <div>
+          <span class="logo-text">APEX.AI</span>
+          <span class="logo-sub">Battery Intelligence</span>
+        </div>
+      </a>
 
-  <div class="topbar-sep"></div>
+      <div class="topbar-sep"></div>
 
-  <div class="topbar-status">
-    <div class="status-dot" id="statusDot"></div>
-    <span id="statusText">OFFLINE</span>
-  </div>
+      <div class="topbar-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">OFFLINE</span>
+      </div>
 
-  <div class="topbar-spacer"></div>
+      <div class="topbar-spacer"></div>
 
-  <div class="topbar-connection">
-    <input class="topbar-input" id="apiUrl" type="text"
-      placeholder="API URL — http://localhost:8000"
-      value="http://localhost:8000">
-    <input class="topbar-input" id="apiKey" type="text"
-      placeholder="X-API-Key (optional)"
-      style="width:170px">
-    <button class="btn btn-ghost" onclick="pingHealth()">PING</button>
-  </div>
+      <div class="topbar-connection">
+        <input class="topbar-input" id="apiUrl" type="text" placeholder="API URL — http://localhost:8000"
+          value="http://localhost:8000">
+        <input class="topbar-input" id="apiKey" type="text" placeholder="X-API-Key (optional)" style="width:170px">
+        <button class="btn btn-ghost" onclick="pingHealth()">PING</button>
+      </div>
 
-  <div class="topbar-sep"></div>
-  <div class="topbar-clock" id="clock">--:--:--</div>
-</header>
+      <div class="topbar-sep"></div>
+      <div class="topbar-clock" id="clock">--:--:--</div>
+    </header>
 
-<!-- ══════════════════════════════════════════════════════════
+    <!-- ══════════════════════════════════════════════════════════
      SIDEBAR
 ═════════════════════════════════════════════════════════════ -->
-<aside class="sidebar">
+    <aside class="sidebar">
 
-  <div class="sidebar-label">Presets</div>
-  <div class="sidebar-section">
-    <div class="preset-grid">
-      <button class="preset-btn preset-normal"  onclick="loadPreset('normal')">Normal</button>
-      <button class="preset-btn preset-amber"   onclick="loadPreset('amber')">Amber</button>
-      <button class="preset-btn preset-red"     onclick="loadPreset('red')">Red</button>
-      <button class="preset-btn preset-abort"   onclick="loadPreset('abort')">Abort</button>
-      <button class="preset-btn preset-aged"    onclick="loadPreset('aged')">Aged Cell</button>
-      <button class="preset-btn preset-eol"     onclick="loadPreset('eol')">EOL</button>
-    </div>
-  </div>
-
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-label">Battery Parameters</div>
-  <div class="sidebar-section">
-    <div class="param-group">
-
-      <div class="param-row">
-        <span class="param-symbol">V</span>
-        <span class="param-name">Voltage</span>
-        <input class="param-input" id="p_voltage" type="number" min="2.5" max="4.2" step="0.01" value="3.80">
-        <span class="param-unit">V</span>
-      </div>
-      <div class="slider-row">
-        <input type="range" id="s_voltage" min="2.5" max="4.2" step="0.01" value="3.80"
-          oninput="syncParam('voltage',this.value)">
+      <div class="sidebar-label">Presets</div>
+      <div class="sidebar-section">
+        <div class="preset-grid">
+          <button class="preset-btn preset-normal" onclick="loadPreset('normal')">Normal</button>
+          <button class="preset-btn preset-amber" onclick="loadPreset('amber')">Amber</button>
+          <button class="preset-btn preset-red" onclick="loadPreset('red')">Red</button>
+          <button class="preset-btn preset-abort" onclick="loadPreset('abort')">Abort</button>
+          <button class="preset-btn preset-aged" onclick="loadPreset('aged')">Aged Cell</button>
+          <button class="preset-btn preset-eol" onclick="loadPreset('eol')">EOL</button>
+        </div>
       </div>
 
-      <div class="param-row">
-        <span class="param-symbol">I</span>
-        <span class="param-name">Current</span>
-        <input class="param-input" id="p_current" type="number" min="-50" max="50" step="0.1" value="-2.0">
-        <span class="param-unit">A</span>
-      </div>
-      <div class="slider-row">
-        <input type="range" id="s_current" min="-50" max="50" step="0.1" value="-2.0"
-          oninput="syncParam('current',this.value)">
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label">Battery Parameters</div>
+      <div class="sidebar-section">
+        <div class="param-group">
+
+          <div class="param-row">
+            <span class="param-symbol">V</span>
+            <span class="param-name">Voltage</span>
+            <input class="param-input" id="p_voltage" type="number" min="2.5" max="4.2" step="0.01" value="3.80">
+            <span class="param-unit">V</span>
+          </div>
+          <div class="slider-row">
+            <input type="range" id="s_voltage" min="2.5" max="4.2" step="0.01" value="3.80"
+              oninput="syncParam('voltage',this.value)">
+          </div>
+
+          <div class="param-row">
+            <span class="param-symbol">I</span>
+            <span class="param-name">Current</span>
+            <input class="param-input" id="p_current" type="number" min="-50" max="50" step="0.1" value="-2.0">
+            <span class="param-unit">A</span>
+          </div>
+          <div class="slider-row">
+            <input type="range" id="s_current" min="-50" max="50" step="0.1" value="-2.0"
+              oninput="syncParam('current',this.value)">
+          </div>
+
+          <div class="param-row">
+            <span class="param-symbol">T</span>
+            <span class="param-name">Temperature</span>
+            <input class="param-input" id="p_temperature" type="number" min="-20" max="80" step="0.1" value="35.0">
+            <span class="param-unit">°C</span>
+          </div>
+          <div class="slider-row">
+            <input type="range" id="s_temperature" min="-20" max="80" step="0.1" value="35.0"
+              oninput="syncParam('temperature',this.value)">
+          </div>
+
+          <div class="param-row">
+            <span class="param-symbol">N</span>
+            <span class="param-name">Cycle Count</span>
+            <input class="param-input" id="p_cycle_count" type="number" min="0" max="10000" step="1" value="150">
+            <span class="param-unit">—</span>
+          </div>
+          <div class="slider-row">
+            <input type="range" id="s_cycle_count" min="0" max="2000" step="1" value="150"
+              oninput="syncParam('cycle_count',this.value)">
+          </div>
+
+        </div>
       </div>
 
-      <div class="param-row">
-        <span class="param-symbol">T</span>
-        <span class="param-name">Temperature</span>
-        <input class="param-input" id="p_temperature" type="number" min="-20" max="80" step="0.1" value="35.0">
-        <span class="param-unit">°C</span>
-      </div>
-      <div class="slider-row">
-        <input type="range" id="s_temperature" min="-20" max="80" step="0.1" value="35.0"
-          oninput="syncParam('temperature',this.value)">
-      </div>
-
-      <div class="param-row">
-        <span class="param-symbol">N</span>
-        <span class="param-name">Cycle Count</span>
-        <input class="param-input" id="p_cycle_count" type="number" min="0" max="10000" step="1" value="150">
-        <span class="param-unit">—</span>
-      </div>
-      <div class="slider-row">
-        <input type="range" id="s_cycle_count" min="0" max="2000" step="1" value="150"
-          oninput="syncParam('cycle_count',this.value)">
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label">Battery ID</div>
+      <div class="sidebar-section">
+        <div class="param-row">
+          <span class="param-symbol">#</span>
+          <input class="param-input" id="p_battery_id" type="text" value="CELL_001"
+            style="width:auto;flex:1;text-align:left;">
+        </div>
       </div>
 
-    </div>
-  </div>
-
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-label">Battery ID</div>
-  <div class="sidebar-section">
-    <div class="param-row">
-      <span class="param-symbol">#</span>
-      <input class="param-input" id="p_battery_id" type="text" value="CELL_001" style="width:auto;flex:1;text-align:left;">
-    </div>
-  </div>
-
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-label">Auth</div>
-  <div class="sidebar-section api-key-row">
-    <input class="api-key-input" id="sideApiKey" type="text" placeholder="API key (optional)">
-  </div>
-
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-label">Control</div>
-  <div class="sidebar-section">
-    <div class="poll-row">
-      <span class="poll-label">Auto-poll (10Hz)</span>
-      <label class="toggle">
-        <input type="checkbox" id="autoPoll" onchange="toggleAutoPoll()">
-        <div class="toggle-track"></div>
-      </label>
-    </div>
-    <div class="poll-row" style="justify-content:space-between;">
-      <span class="poll-label" style="font-family:'Space Mono';font-size:9px;color:var(--text-dim)">Interval</span>
-      <span id="pollHz" style="font-family:'Space Mono';font-size:9px;color:var(--amber)">100ms</span>
-    </div>
-  </div>
-
-  <div class="run-btn-wrap">
-    <button class="run-btn" id="runBtn" onclick="runInference()">
-      <span>▶</span> Run Inference
-    </button>
-  </div>
-
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-label">System</div>
-  <div class="sidebar-section">
-    <div class="stat-list">
-      <div class="stat-item">
-        <span class="stat-key">Model TR</span>
-        <span class="stat-val" id="sysModelTR"><span class="version-pill">sprint3</span></span>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label">Auth</div>
+      <div class="sidebar-section api-key-row">
+        <input class="api-key-input" id="sideApiKey" type="text" placeholder="API key (optional)">
       </div>
-      <div class="stat-item">
-        <span class="stat-key">Model SoH</span>
-        <span class="stat-val" id="sysModelSoH"><span class="version-pill">sprint2</span></span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-key">API v</span>
-        <span class="stat-val"><span class="version-pill">4.0.0</span></span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-key">Calls</span>
-        <span class="stat-val" id="sysCalls">0</span>
-      </div>
-    </div>
-  </div>
 
-</aside>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label">Control</div>
+      <div class="sidebar-section">
+        <div class="poll-row">
+          <span class="poll-label">Auto-poll (10Hz)</span>
+          <label class="toggle">
+            <input type="checkbox" id="autoPoll" onchange="toggleAutoPoll()">
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+        <div class="poll-row" style="justify-content:space-between;">
+          <span class="poll-label" style="font-family:'Space Mono';font-size:9px;color:var(--text-dim)">Interval</span>
+          <span id="pollHz" style="font-family:'Space Mono';font-size:9px;color:var(--amber)">100ms</span>
+        </div>
+      </div>
 
-<!-- ══════════════════════════════════════════════════════════
+      <div class="run-btn-wrap">
+        <button class="run-btn" id="runBtn" onclick="runInference()">
+          <span>▶</span> Run Inference
+        </button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label">System</div>
+      <div class="sidebar-section">
+        <div class="stat-list">
+          <div class="stat-item">
+            <span class="stat-key">Model TR</span>
+            <span class="stat-val" id="sysModelTR"><span class="version-pill">sprint3</span></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-key">Model SoH</span>
+            <span class="stat-val" id="sysModelSoH"><span class="version-pill">sprint2</span></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-key">API v</span>
+            <span class="stat-val"><span class="version-pill">4.0.0</span></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-key">Calls</span>
+            <span class="stat-val" id="sysCalls">0</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ══════════════════════════════════════════════════════════
      MAIN CONTENT
 ═════════════════════════════════════════════════════════════ -->
-<main class="main">
+    <main class="main">
 
-  <!-- Alert Banner -->
-  <div class="alert-banner" id="alertBanner">
-    <div class="alert-banner-inner" id="alertBannerInner">
-      <div class="alert-icon" id="alertIcon">⚡</div>
-      <div class="alert-body">
-        <div class="alert-level" id="alertLevel">—</div>
-        <div class="alert-msg" id="alertMsg">—</div>
-      </div>
-      <div class="alert-ts" id="alertTs">—</div>
-    </div>
-  </div>
-
-  <!-- KPI Strip -->
-  <div class="kpi-strip">
-    <div class="kpi" style="--kpi-color: var(--red);">
-      <div class="kpi-label">TR Risk</div>
-      <div class="kpi-value" id="kpiTR">—</div>
-      <div class="kpi-unit">%  probability</div>
-      <div class="kpi-delta" id="kpiTRLevel">—</div>
-    </div>
-    <div class="kpi" style="--kpi-color: var(--cyan);">
-      <div class="kpi-label">State of Health</div>
-      <div class="kpi-value" id="kpiSoH">—</div>
-      <div class="kpi-unit">%  capacity retained</div>
-      <div class="kpi-delta" id="kpiSoHStatus">—</div>
-    </div>
-    <div class="kpi" style="--kpi-color: var(--amber);">
-      <div class="kpi-label">EOL Cycles</div>
-      <div class="kpi-value" id="kpiEOL">—</div>
-      <div class="kpi-unit">cycles to 80% SoH</div>
-    </div>
-    <div class="kpi" style="--kpi-color: var(--blue);">
-      <div class="kpi-label">Degradation Rate</div>
-      <div class="kpi-value" id="kpiDeg">—</div>
-      <div class="kpi-unit">% SoH / cycle</div>
-    </div>
-    <div class="kpi" style="--kpi-color: var(--green);">
-      <div class="kpi-label">Model Confidence</div>
-      <div class="kpi-value" id="kpiConf">—</div>
-      <div class="kpi-unit">TR classifier score</div>
-    </div>
-    <div class="kpi" style="--kpi-color: var(--text-secondary);">
-      <div class="kpi-label">Latency</div>
-      <div class="kpi-value" id="kpiLat">—</div>
-      <div class="kpi-unit">ms  end-to-end</div>
-    </div>
-  </div>
-
-  <!-- Gauge Row -->
-  <div class="gauge-row">
-
-    <!-- TR Gauge -->
-    <div class="gauge-card" id="trGaugeCard">
-      <div class="gauge-title">
-        Thermal Runaway Risk
-        <span class="gauge-badge" id="trBadge">—</span>
-      </div>
-      <div class="gauge-canvas-wrap" style="width:200px;height:130px;">
-        <canvas id="trGaugeCanvas" width="200" height="130"></canvas>
-        <div class="gauge-center" style="top:60%;">
-          <div class="gauge-big-val" id="trGaugeVal" style="color:var(--text-secondary)">—</div>
-          <div class="gauge-big-unit">%</div>
+      <!-- Alert Banner -->
+      <div class="alert-banner" id="alertBanner">
+        <div class="alert-banner-inner" id="alertBannerInner">
+          <div class="alert-icon" id="alertIcon">⚡</div>
+          <div class="alert-body">
+            <div class="alert-level" id="alertLevel">—</div>
+            <div class="alert-msg" id="alertMsg">—</div>
+          </div>
+          <div class="alert-ts" id="alertTs">—</div>
         </div>
       </div>
-      <div class="eol-strip" style="width:100%;">
-        <div class="eol-row">
-          <span class="eol-label">GREEN &lt;70%</span>
-          <div class="eol-bar-wrap">
-            <div class="eol-bar-fill" id="zoneGreen" style="background:var(--green);width:70%"></div>
+
+      <!-- KPI Strip -->
+      <div class="kpi-strip">
+        <div class="kpi" style="--kpi-color: var(--red);">
+          <div class="kpi-label">TR Risk</div>
+          <div class="kpi-value" id="kpiTR">—</div>
+          <div class="kpi-unit">% probability</div>
+          <div class="kpi-delta" id="kpiTRLevel">—</div>
+        </div>
+        <div class="kpi" style="--kpi-color: var(--cyan);">
+          <div class="kpi-label">State of Health</div>
+          <div class="kpi-value" id="kpiSoH">—</div>
+          <div class="kpi-unit">% capacity retained</div>
+          <div class="kpi-delta" id="kpiSoHStatus">—</div>
+        </div>
+        <div class="kpi" style="--kpi-color: var(--amber);">
+          <div class="kpi-label">EOL Cycles</div>
+          <div class="kpi-value" id="kpiEOL">—</div>
+          <div class="kpi-unit">cycles to 80% SoH</div>
+        </div>
+        <div class="kpi" style="--kpi-color: var(--blue);">
+          <div class="kpi-label">Degradation Rate</div>
+          <div class="kpi-value" id="kpiDeg">—</div>
+          <div class="kpi-unit">% SoH / cycle</div>
+        </div>
+        <div class="kpi" style="--kpi-color: var(--green);">
+          <div class="kpi-label">Model Confidence</div>
+          <div class="kpi-value" id="kpiConf">—</div>
+          <div class="kpi-unit">TR classifier score</div>
+        </div>
+        <div class="kpi" style="--kpi-color: var(--text-secondary);">
+          <div class="kpi-label">Latency</div>
+          <div class="kpi-value" id="kpiLat">—</div>
+          <div class="kpi-unit">ms end-to-end</div>
+        </div>
+      </div>
+
+      <!-- Gauge Row -->
+      <div class="gauge-row">
+
+        <!-- TR Gauge -->
+        <div class="gauge-card" id="trGaugeCard">
+          <div class="gauge-title">
+            Thermal Runaway Risk
+            <span class="gauge-badge" id="trBadge">—</span>
+          </div>
+          <div class="gauge-canvas-wrap" style="width:200px;height:130px;">
+            <canvas id="trGaugeCanvas" width="200" height="130"></canvas>
+            <div class="gauge-center" style="top:60%;">
+              <div class="gauge-big-val" id="trGaugeVal" style="color:var(--text-secondary)">—</div>
+              <div class="gauge-big-unit">%</div>
+            </div>
+          </div>
+          <div class="eol-strip" style="width:100%;">
+            <div class="eol-row">
+              <span class="eol-label">GREEN &lt;70%</span>
+              <div class="eol-bar-wrap">
+                <div class="eol-bar-fill" id="zoneGreen" style="background:var(--green);width:70%"></div>
+              </div>
+            </div>
+            <div class="eol-row">
+              <span class="eol-label">AMBER 70-85%</span>
+              <div class="eol-bar-wrap">
+                <div class="eol-bar-fill" id="zoneAmber" style="background:var(--amber);width:15%"></div>
+              </div>
+            </div>
+            <div class="eol-row">
+              <span class="eol-label">RED 85-95%</span>
+              <div class="eol-bar-wrap">
+                <div class="eol-bar-fill" id="zoneRed" style="background:var(--red);width:10%"></div>
+              </div>
+            </div>
+            <div class="eol-row">
+              <span class="eol-label">ABORT &gt;95%</span>
+              <div class="eol-bar-wrap">
+                <div class="eol-bar-fill" id="zoneAbort" style="background:var(--abort);width:5%"></div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="eol-row">
-          <span class="eol-label">AMBER 70-85%</span>
-          <div class="eol-bar-wrap">
-            <div class="eol-bar-fill" id="zoneAmber" style="background:var(--amber);width:15%"></div>
+
+        <!-- SoH Gauge -->
+        <div class="gauge-card" id="sohGaugeCard">
+          <div class="gauge-title">
+            State of Health
+            <span class="gauge-badge level-green" id="sohBadge">—</span>
+          </div>
+          <div style="width:100%;padding:8px 0 4px;">
+            <div class="soh-bar-wrap">
+              <div class="soh-bar-fill" id="sohBarFill" style="width:0%;background:var(--green)"></div>
+              <div class="soh-bar-label" id="sohBarLabel">—</div>
+            </div>
+            <div class="soh-thresholds">
+              <span>0%</span><span>EOL 80%</span><span>AMBER 70%</span><span>100%</span>
+            </div>
+          </div>
+          <div class="gauge-canvas-wrap" style="width:100%;height:90px;">
+            <canvas id="sohHistChart" width="200" height="90"></canvas>
+          </div>
+          <div class="eol-strip" style="width:100%;">
+            <div class="eol-row">
+              <span class="eol-label">SoH Now</span>
+              <div class="eol-bar-wrap">
+                <div class="eol-bar-fill" id="sohNowBar" style="background:var(--cyan);width:0%"></div>
+              </div>
+              <span class="eol-val" id="sohNowVal">—</span>
+            </div>
+            <div class="eol-row">
+              <span class="eol-label">Deg Rate</span>
+              <div class="eol-bar-wrap">
+                <div class="eol-bar-fill" id="degBar" style="background:var(--amber);width:0%"></div>
+              </div>
+              <span class="eol-val" id="degVal">—</span>
+            </div>
+            <div class="eol-row">
+              <span class="eol-label">Cycles to EOL</span>
+              <div class="eol-bar-wrap">
+                <div class="eol-bar-fill" id="eolBar" style="background:var(--blue);width:0%"></div>
+              </div>
+              <span class="eol-val" id="eolVal">—</span>
+            </div>
           </div>
         </div>
-        <div class="eol-row">
-          <span class="eol-label">RED 85-95%</span>
-          <div class="eol-bar-wrap">
-            <div class="eol-bar-fill" id="zoneRed" style="background:var(--red);width:10%"></div>
+
+        <!-- Confidence + Model Info Card -->
+        <div class="gauge-card">
+          <div class="gauge-title">Model Intelligence</div>
+          <div class="stat-list" style="width:100%">
+            <div class="stat-item">
+              <span class="stat-key">TR Confidence</span>
+              <span class="stat-val" id="detConf">—</span>
+            </div>
+            <div class="conf-bar">
+              <div class="conf-fill" id="confBar" style="width:0%;background:var(--green)"></div>
+            </div>
+            <div class="stat-item" style="margin-top:4px">
+              <span class="stat-key">Risk Level</span>
+              <span class="stat-val" id="detRiskLevel">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">Alert Triggered</span>
+              <span class="stat-val" id="detAlert">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">Request ID</span>
+              <span class="stat-val" id="detReqId" style="font-size:8px;color:var(--text-dim)">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">Battery ID</span>
+              <span class="stat-val" id="detBattId">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">TR Model</span>
+              <span class="stat-val" id="detTRModel">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">SoH Model</span>
+              <span class="stat-val" id="detSoHModel">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">Inference ms</span>
+              <span class="stat-val" id="detLatency" style="color:var(--green)">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">Timestamp</span>
+              <span class="stat-val" id="detTs" style="font-size:9px;color:var(--text-secondary)">—</span>
+            </div>
           </div>
         </div>
-        <div class="eol-row">
-          <span class="eol-label">ABORT &gt;95%</span>
-          <div class="eol-bar-wrap">
-            <div class="eol-bar-fill" id="zoneAbort" style="background:var(--abort);width:5%"></div>
+
+      </div>
+
+      <!-- Trend Charts -->
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-card-title">
+            TR Risk History
+            <span style="color:var(--text-dim);font-size:8px">last 20 calls</span>
+          </div>
+          <div class="metric-chart-wrap"><canvas id="trHistChart"></canvas></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card-title">
+            SoH Trend
+            <span style="color:var(--text-dim);font-size:8px">last 20 calls</span>
+          </div>
+          <div class="metric-chart-wrap"><canvas id="sohTrendChart"></canvas></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card-title">
+            Latency (ms)
+            <span style="color:var(--text-dim);font-size:8px">last 20 calls</span>
+          </div>
+          <div class="metric-chart-wrap"><canvas id="latHistChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Input Summary + Feature Importance -->
+      <div class="detail-row">
+        <div class="detail-card">
+          <div class="detail-title">Input Parameters — Current Sample</div>
+          <div class="stat-list">
+            <div class="stat-item">
+              <span class="stat-key">Voltage (V)</span>
+              <span class="stat-val" id="inp_voltage">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">Current (A)</span>
+              <span class="stat-val" id="inp_current">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">Temperature (°C)</span>
+              <span class="stat-val" id="inp_temperature">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">Cycle Count</span>
+              <span class="stat-val" id="inp_cycle">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">V mean (batch)</span>
+              <span class="stat-val" id="inp_vmean">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">I max |abs| (batch)</span>
+              <span class="stat-val" id="inp_imax">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">T max (batch)</span>
+              <span class="stat-val" id="inp_tmax">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-key">Battery ID</span>
+              <span class="stat-val" id="inp_bid">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-title">TR Feature Contribution (XGBoost signals)</div>
+          <div class="stat-list" id="featureList">
+            <div
+              style="color:var(--text-dim);font-family:'Space Mono',monospace;font-size:10px;padding:20px 0;text-align:center">
+              Run inference to see feature contributions
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- SoH Gauge -->
-    <div class="gauge-card" id="sohGaugeCard">
-      <div class="gauge-title">
-        State of Health
-        <span class="gauge-badge level-green" id="sohBadge">—</span>
+      <!-- Alert & Request Log -->
+      <div class="log-card">
+        <div class="log-header">
+          <span class="log-title">Inference Log</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="log-count" id="logCount">0 entries</span>
+            <button class="btn btn-ghost" style="padding:3px 10px;font-size:9px;" onclick="clearLog()">CLEAR</button>
+          </div>
+        </div>
+        <div class="log-table-wrap">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Time</th>
+                <th>Battery</th>
+                <th>TR Risk %</th>
+                <th>Level</th>
+                <th>SoH %</th>
+                <th>Deg Rate</th>
+                <th>EOL Cycles</th>
+                <th>Confidence</th>
+                <th>Lat ms</th>
+                <th>Alert</th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody">
+              <tr>
+                <td colspan="11" class="log-empty">No inference calls yet — adjust parameters and click Run Inference
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div style="width:100%;padding:8px 0 4px;">
-        <div class="soh-bar-wrap">
-          <div class="soh-bar-fill" id="sohBarFill" style="width:0%;background:var(--green)"></div>
-          <div class="soh-bar-label" id="sohBarLabel">—</div>
-        </div>
-        <div class="soh-thresholds">
-          <span>0%</span><span>EOL 80%</span><span>AMBER 70%</span><span>100%</span>
-        </div>
-      </div>
-      <div class="gauge-canvas-wrap" style="width:100%;height:90px;">
-        <canvas id="sohHistChart" width="200" height="90"></canvas>
-      </div>
-      <div class="eol-strip" style="width:100%;">
-        <div class="eol-row">
-          <span class="eol-label">SoH Now</span>
-          <div class="eol-bar-wrap"><div class="eol-bar-fill" id="sohNowBar" style="background:var(--cyan);width:0%"></div></div>
-          <span class="eol-val" id="sohNowVal">—</span>
-        </div>
-        <div class="eol-row">
-          <span class="eol-label">Deg Rate</span>
-          <div class="eol-bar-wrap"><div class="eol-bar-fill" id="degBar" style="background:var(--amber);width:0%"></div></div>
-          <span class="eol-val" id="degVal">—</span>
-        </div>
-        <div class="eol-row">
-          <span class="eol-label">Cycles to EOL</span>
-          <div class="eol-bar-wrap"><div class="eol-bar-fill" id="eolBar" style="background:var(--blue);width:0%"></div></div>
-          <span class="eol-val" id="eolVal">—</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- Confidence + Model Info Card -->
-    <div class="gauge-card">
-      <div class="gauge-title">Model Intelligence</div>
-      <div class="stat-list" style="width:100%">
-        <div class="stat-item">
-          <span class="stat-key">TR Confidence</span>
-          <span class="stat-val" id="detConf">—</span>
-        </div>
-        <div class="conf-bar">
-          <div class="conf-fill" id="confBar" style="width:0%;background:var(--green)"></div>
-        </div>
-        <div class="stat-item" style="margin-top:4px">
-          <span class="stat-key">Risk Level</span>
-          <span class="stat-val" id="detRiskLevel">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">Alert Triggered</span>
-          <span class="stat-val" id="detAlert">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">Request ID</span>
-          <span class="stat-val" id="detReqId" style="font-size:8px;color:var(--text-dim)">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">Battery ID</span>
-          <span class="stat-val" id="detBattId">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">TR Model</span>
-          <span class="stat-val" id="detTRModel">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">SoH Model</span>
-          <span class="stat-val" id="detSoHModel">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">Inference ms</span>
-          <span class="stat-val" id="detLatency" style="color:var(--green)">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">Timestamp</span>
-          <span class="stat-val" id="detTs" style="font-size:9px;color:var(--text-secondary)">—</span>
-        </div>
-      </div>
-    </div>
+    </main>
 
+  </div><!-- .shell -->
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
   </div>
 
-  <!-- Trend Charts -->
-  <div class="metrics-row">
-    <div class="metric-card">
-      <div class="metric-card-title">
-        TR Risk History
-        <span style="color:var(--text-dim);font-size:8px">last 20 calls</span>
-      </div>
-      <div class="metric-chart-wrap"><canvas id="trHistChart"></canvas></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-card-title">
-        SoH Trend
-        <span style="color:var(--text-dim);font-size:8px">last 20 calls</span>
-      </div>
-      <div class="metric-chart-wrap"><canvas id="sohTrendChart"></canvas></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-card-title">
-        Latency (ms)
-        <span style="color:var(--text-dim);font-size:8px">last 20 calls</span>
-      </div>
-      <div class="metric-chart-wrap"><canvas id="latHistChart"></canvas></div>
-    </div>
-  </div>
+  <!-- Error Toast -->
+  <div class="toast" id="toast"></div>
 
-  <!-- Input Summary + Feature Importance -->
-  <div class="detail-row">
-    <div class="detail-card">
-      <div class="detail-title">Input Parameters — Current Sample</div>
-      <div class="stat-list">
-        <div class="stat-item">
-          <span class="stat-key">Voltage (V)</span>
-          <span class="stat-val" id="inp_voltage">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">Current (A)</span>
-          <span class="stat-val" id="inp_current">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">Temperature (°C)</span>
-          <span class="stat-val" id="inp_temperature">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">Cycle Count</span>
-          <span class="stat-val" id="inp_cycle">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">V mean (batch)</span>
-          <span class="stat-val" id="inp_vmean">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">I max |abs| (batch)</span>
-          <span class="stat-val" id="inp_imax">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">T max (batch)</span>
-          <span class="stat-val" id="inp_tmax">—</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-key">Battery ID</span>
-          <span class="stat-val" id="inp_bid">—</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="detail-card">
-      <div class="detail-title">TR Feature Contribution (XGBoost signals)</div>
-      <div class="stat-list" id="featureList">
-        <div style="color:var(--text-dim);font-family:'Space Mono',monospace;font-size:10px;padding:20px 0;text-align:center">
-          Run inference to see feature contributions
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Alert & Request Log -->
-  <div class="log-card">
-    <div class="log-header">
-      <span class="log-title">Inference Log</span>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span class="log-count" id="logCount">0 entries</span>
-        <button class="btn btn-ghost" style="padding:3px 10px;font-size:9px;" onclick="clearLog()">CLEAR</button>
-      </div>
-    </div>
-    <div class="log-table-wrap">
-      <table class="log-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Time</th>
-            <th>Battery</th>
-            <th>TR Risk %</th>
-            <th>Level</th>
-            <th>SoH %</th>
-            <th>Deg Rate</th>
-            <th>EOL Cycles</th>
-            <th>Confidence</th>
-            <th>Lat ms</th>
-            <th>Alert</th>
-          </tr>
-        </thead>
-        <tbody id="logTableBody">
-          <tr><td colspan="11" class="log-empty">No inference calls yet — adjust parameters and click Run Inference</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-</main>
-
-</div><!-- .shell -->
-
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner"></div>
-</div>
-
-<!-- Error Toast -->
-<div class="toast" id="toast"></div>
-
-<!-- ══════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════
      JAVASCRIPT
 ═════════════════════════════════════════════════════════════ -->
-<script>
-// ─── STATE ───────────────────────────────────────────────────────────────────
-const state = {
-  connected: false,
-  polling:   false,
-  pollTimer: null,
-  callCount: 0,
-  log: [],
-  history: { tr:[], soh:[], lat:[], labels:[] }
-};
-
-// ─── PRESETS ─────────────────────────────────────────────────────────────────
-const PRESETS = {
-  normal: { voltage:3.80, current:-2.0, temperature:35, cycle_count:150, label:'Normal Operation' },
-  amber:  { voltage:3.55, current:-5.5, temperature:50, cycle_count:280, label:'Elevated Risk' },
-  red:    { voltage:2.95, current:25.0, temperature:68, cycle_count:450, label:'HIGH RISK — Red Alert' },
-  abort:  { voltage:2.52, current:48.0, temperature:88, cycle_count:950, label:'ABORT — Immediate danger' },
-  aged:   { voltage:3.65, current:-1.5, temperature:30, cycle_count:800, label:'Aged Cell — High cycles' },
-  eol:    { voltage:3.60, current:-1.0, temperature:28, cycle_count:1400, label:'Near End-of-Life' },
-};
-
-function loadPreset(name) {
-  const p = PRESETS[name];
-  if (!p) return;
-  ['voltage','current','temperature','cycle_count'].forEach(k => {
-    setParam(k, p[k]);
-  });
-  showToast('Preset: ' + p.label, 'info');
-}
-
-function setParam(key, val) {
-  const inp = document.getElementById('p_' + key);
-  const sl  = document.getElementById('s_' + key);
-  if (inp) inp.value = val;
-  if (sl)  sl.value  = val;
-}
-
-function syncParam(key, val) {
-  const inp = document.getElementById('p_' + key);
-  if (inp) inp.value = parseFloat(val).toFixed(key === 'cycle_count' ? 0 : 2);
-}
-
-// Also sync slider when input changes
-['voltage','current','temperature','cycle_count'].forEach(k => {
-  const inp = document.getElementById('p_' + k);
-  const sl  = document.getElementById('s_' + k);
-  if (inp && sl) {
-    inp.addEventListener('input', () => { sl.value = inp.value; });
-  }
-});
-
-// ─── API KEY helpers ─────────────────────────────────────────────────────────
-function getApiKey() {
-  return (document.getElementById('sideApiKey').value ||
-          document.getElementById('apiKey').value || '').trim();
-}
-function getApiUrl() {
-  return (document.getElementById('apiUrl').value || 'http://localhost:8000').trim().replace(/\/$/, '');
-}
-
-// ─── HEALTH PING ─────────────────────────────────────────────────────────────
-async function pingHealth() {
-  const dot  = document.getElementById('statusDot');
-  const txt  = document.getElementById('statusText');
-  try {
-    const r = await fetch(getApiUrl() + '/health', { signal: AbortSignal.timeout(3000) });
-    if (r.ok) {
-      dot.className = 'status-dot live';
-      txt.textContent = 'LIVE';
-      state.connected = true;
-    } else {
-      dot.className = 'status-dot error';
-      txt.textContent = 'ERR ' + r.status;
-      state.connected = false;
-    }
-  } catch(e) {
-    dot.className = 'status-dot error';
-    txt.textContent = 'UNREACHABLE';
-    state.connected = false;
-  }
-}
-
-// ─── AUTO-POLL ───────────────────────────────────────────────────────────────
-function toggleAutoPoll() {
-  const on = document.getElementById('autoPoll').checked;
-  if (on) {
-    state.polling = true;
-    state.pollTimer = setInterval(runInference, 100);
-    document.getElementById('pollHz').textContent = '100ms';
-  } else {
-    state.polling = false;
-    clearInterval(state.pollTimer);
-  }
-}
-
-// ─── BUILD REQUEST PAYLOAD ────────────────────────────────────────────────────
-// Matches InferenceRequest schema in inference.py exactly:
-// voltage_mean, current_rms, temp_max, c_rate, coulombic_efficiency,
-// r_internal, cycle_count, soc, ambient_temp, pack_voltage
-function buildPayload() {
-  const V = parseFloat(document.getElementById('p_voltage').value);
-  const I = parseFloat(document.getElementById('p_current').value);
-  const T = parseFloat(document.getElementById('p_temperature').value);
-  const N = parseInt(document.getElementById('p_cycle_count').value);
-
-  // Derive reasonable values for fields not directly on the sliders
-  const c_rate             = +(Math.abs(I) / 5.0).toFixed(3);          // approx C-rate (5Ah cell)
-  const coulombic_eff      = +(0.98 - Math.max(0, (T - 40) * 0.001)).toFixed(4); // degrades with heat
-  const r_internal         = +(0.05 + N * 0.00005).toFixed(4);         // rises with cycle count
-  const soc                = +(Math.min(Math.max((V - 2.5) / 1.7, 0.0), 1.0)).toFixed(4); // approx SoC from V
-  const ambient_temp       = +(T * 0.7).toFixed(2);                    // ambient ~ 70% of cell temp
-  const pack_voltage       = +(V * 20).toFixed(2);                     // 20s pack
-
-  return {
-    voltage_mean:         +V.toFixed(4),
-    current_rms:          +Math.abs(I).toFixed(4),
-    temp_max:             +T.toFixed(4),
-    c_rate,
-    coulombic_efficiency: coulombic_eff,
-    r_internal,
-    cycle_count:          N,
-    soc,
-    ambient_temp,
-    pack_voltage,
-  };
-}
-
-// Keep a copy of last raw slider values for the input summary panel
-function _lastSliderSnapshot() {
-  return {
-    voltage:     parseFloat(document.getElementById('p_voltage').value),
-    current:     parseFloat(document.getElementById('p_current').value),
-    temperature: parseFloat(document.getElementById('p_temperature').value),
-    cycle_count: parseInt(document.getElementById('p_cycle_count').value),
-    battery_id:  document.getElementById('p_battery_id').value.trim() || 'CELL_001',
-  };
-}
-
-// ─── MAIN INFERENCE ──────────────────────────────────────────────────────────
-async function runInference() {
-  const btn = document.getElementById('runBtn');
-  if (!state.polling) {
-    btn.disabled = true;
-    document.getElementById('loadingOverlay').classList.add('active');
-  }
-
-  const payload  = buildPayload();
-  const snapshot = _lastSliderSnapshot();
-  const headers  = { 'Content-Type': 'application/json' };
-  const key = getApiKey();
-  if (key) headers['X-API-Key'] = key;
-
-  try {
-    const t0 = performance.now();
-    const res = await fetch(getApiUrl() + '/inference', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000)
-    });
-    const rtt = (performance.now() - t0).toFixed(1);
-
-    if (res.status === 401) { showToast('Invalid API key — check your X-API-Key', 'error'); return; }
-    if (res.status === 422) { showToast('Validation error — check input ranges', 'error'); return; }
-    if (!res.ok) { showToast('API error: HTTP ' + res.status, 'error'); return; }
-
-    // ── Normalise API response → internal format ──────────────────────────
-    // inference.py returns: { soh, thermal_risk, tr_score, risk_level, alert, latency_ms }
-    // Map it to the shape renderResults() expects.
-    const raw = await res.json();
-
-    const trScorePct = raw.tr_score * 100;
-    const sohValue   = raw.soh * 100;   // API returns 0-1 fraction; display as %
-
-    // Derive EOL and degradation from cycle_count + SoH
-    const cyclesPerPct    = payload.cycle_count > 0 ? payload.cycle_count / Math.max(100 - sohValue, 0.1) : 2000;
-    const eol_cycles      = Math.round(Math.max(0, (sohValue - 80) * cyclesPerPct));
-    const degradation_rate = payload.cycle_count > 0 ? (100 - sohValue) / Math.max(payload.cycle_count, 1) : 0;
-
-    const data = {
-      request_id:  raw.request_id || ('REQ-' + Date.now()),
-      battery_id:  snapshot.battery_id,
-      timestamp:   new Date().toISOString(),
-      latency_ms:  raw.latency_ms,
-      model_versions: { tr_classifier: 'sprint3', soh_tcn: 'sprint2' },
-      tr_prediction: {
-        risk_score:       trScorePct,
-        risk_level:       raw.risk_level,
-        confidence:       1 - raw.tr_score,   // confidence = distance from TR threshold
-        alert_triggered:  raw.alert,
-        thermal_risk:     raw.thermal_risk,
-      },
-      soh_prediction: {
-        soh:              sohValue,
-        eol_cycles:       eol_cycles,
-        degradation_rate: degradation_rate,
-      },
-      // Keep raw payload reference for input summary panel
-      _payload: payload,
-      _snapshot: snapshot,
+  <script>
+    // ─── STATE ───────────────────────────────────────────────────────────────────
+    const state = {
+      connected: false,
+      polling: false,
+      pollTimer: null,
+      callCount: 0,
+      log: [],
+      history: { tr: [], soh: [], lat: [], labels: [] }
     };
 
-    state.callCount++;
-    document.getElementById('statusDot').className = 'status-dot live';
-    document.getElementById('statusText').textContent = 'LIVE';
-    state.connected = true;
+    // ─── PRESETS ─────────────────────────────────────────────────────────────────
+    const PRESETS = {
+      normal: { voltage: 3.80, current: -2.0, temperature: 35, cycle_count: 150, label: 'Normal Operation' },
+      amber: { voltage: 2.88, current: 12.0, temperature: 72, cycle_count: 280, label: 'Elevated Risk' },
+      red: { voltage: 2.95, current: 25.0, temperature: 68, cycle_count: 450, label: 'HIGH RISK — Red Alert' },
+      abort: { voltage: 2.52, current: 48.0, temperature: 88, cycle_count: 950, label: 'ABORT — Immediate danger' },
+      aged: { voltage: 3.65, current: -1.5, temperature: 30, cycle_count: 800, label: 'Aged Cell — High cycles' },
+      eol: { voltage: 3.60, current: -1.0, temperature: 28, cycle_count: 1400, label: 'Near End-of-Life' },
+    };
 
-    renderResults(data, snapshot, parseFloat(rtt));
-
-  } catch(e) {
-    if (e.name !== 'AbortError') {
-      showToast('Connection failed: ' + e.message, 'error');
-      document.getElementById('statusDot').className = 'status-dot error';
-      document.getElementById('statusText').textContent = 'ERROR';
+    function loadPreset(name) {
+      const p = PRESETS[name];
+      if (!p) return;
+      ['voltage', 'current', 'temperature', 'cycle_count'].forEach(k => {
+        setParam(k, p[k]);
+      });
+      showToast('Preset: ' + p.label, 'info');
     }
-  } finally {
-    if (!state.polling) {
-      btn.disabled = false;
-      document.getElementById('loadingOverlay').classList.remove('active');
+
+    function setParam(key, val) {
+      const inp = document.getElementById('p_' + key);
+      const sl = document.getElementById('s_' + key);
+      if (inp) inp.value = val;
+      if (sl) sl.value = val;
     }
-  }
-}
 
-// ─── RENDER RESULTS ───────────────────────────────────────────────────────────
-function renderResults(data, payload, rtt) {
-  const tr  = data.tr_prediction;
-  const soh = data.soh_prediction;
-  const risk  = tr.risk_score;
-  const level = tr.risk_level;
+    function syncParam(key, val) {
+      const inp = document.getElementById('p_' + key);
+      if (inp) inp.value = parseFloat(val).toFixed(key === 'cycle_count' ? 0 : 2);
+    }
 
-  // ── Alert banner ──
-  updateAlertBanner(tr);
+    // Also sync slider when input changes
+    ['voltage', 'current', 'temperature', 'cycle_count'].forEach(k => {
+      const inp = document.getElementById('p_' + k);
+      const sl = document.getElementById('s_' + k);
+      if (inp && sl) {
+        inp.addEventListener('input', () => { sl.value = inp.value; });
+      }
+    });
 
-  // ── KPI strip ──
-  setKPI('kpiTR',   risk.toFixed(1));
-  setKPI('kpiSoH',  soh.soh.toFixed(1));
-  setKPI('kpiEOL',  soh.eol_cycles.toLocaleString());
-  setKPI('kpiDeg',  soh.degradation_rate.toFixed(4));
-  setKPI('kpiConf', (tr.confidence * 100).toFixed(1));
-  setKPI('kpiLat',  (data.latency_ms || rtt).toFixed(2));
-  document.getElementById('kpiTRLevel').textContent = level;
-  document.getElementById('kpiSoHStatus').textContent = soh.soh >= 80 ? 'GOOD' : soh.soh >= 60 ? 'DEGRADED' : 'CRITICAL';
+    // ─── API KEY helpers ─────────────────────────────────────────────────────────
+    function getApiKey() {
+      return (document.getElementById('sideApiKey').value ||
+        document.getElementById('apiKey').value || '').trim();
+    }
+    function getApiUrl() {
+      return (document.getElementById('apiUrl').value || 'http://localhost:8000').trim().replace(/\/$/, '');
+    }
 
-  // ── TR Gauge ──
-  drawTRGauge(risk, level);
-  document.getElementById('trGaugeVal').textContent = risk.toFixed(1);
-  document.getElementById('trGaugeVal').style.color = levelColor(level);
-
-  const badge = document.getElementById('trBadge');
-  badge.textContent = level;
-  badge.className = 'gauge-badge level-' + level.toLowerCase();
-
-  // ── TR zone bars ──
-  const trNorm = Math.min(risk, 100);
-  document.getElementById('zoneGreen').style.width  = Math.min(trNorm / 70 * 100, 100) + '%';
-  document.getElementById('zoneAmber').style.width  = trNorm >= 70 ? Math.min((trNorm-70) / 15 * 100, 100) + '%' : '0%';
-  document.getElementById('zoneRed').style.width    = trNorm >= 85 ? Math.min((trNorm-85) / 10 * 100, 100) + '%' : '0%';
-  document.getElementById('zoneAbort').style.width  = trNorm >= 95 ? Math.min((trNorm-95) / 5 * 100, 100) + '%' : '0%';
-
-  // ── SoH bar ──
-  const sohPct = Math.min(soh.soh, 100);
-  const sohColor = sohPct >= 80 ? 'var(--cyan)' : sohPct >= 60 ? 'var(--amber)' : 'var(--red)';
-  document.getElementById('sohBarFill').style.width = sohPct + '%';
-  document.getElementById('sohBarFill').style.background = sohColor;
-  document.getElementById('sohBarLabel').textContent = soh.soh.toFixed(1) + '%';
-
-  const sohBadge = document.getElementById('sohBadge');
-  sohBadge.textContent = sohPct >= 80 ? 'HEALTHY' : sohPct >= 60 ? 'DEGRADED' : 'CRITICAL';
-  sohBadge.className = 'gauge-badge ' + (sohPct >= 80 ? 'level-green' : sohPct >= 60 ? 'level-amber' : 'level-red');
-
-  // ── SoH detail bars ──
-  document.getElementById('sohNowBar').style.width = sohPct + '%';
-  document.getElementById('sohNowVal').textContent = soh.soh.toFixed(1) + '%';
-  document.getElementById('degBar').style.width = Math.min(soh.degradation_rate * 1000, 100) + '%';
-  document.getElementById('degVal').textContent = soh.degradation_rate.toFixed(4);
-  document.getElementById('eolBar').style.width = Math.min(soh.eol_cycles / 50, 100) + '%';
-  document.getElementById('eolVal').textContent = soh.eol_cycles.toLocaleString();
-
-  // ── Model detail ──
-  document.getElementById('detConf').textContent     = (tr.confidence * 100).toFixed(1) + '%';
-  document.getElementById('confBar').style.width     = (tr.confidence * 100) + '%';
-  document.getElementById('confBar').style.background = tr.confidence > 0.85 ? 'var(--green)' : 'var(--amber)';
-  document.getElementById('detRiskLevel').textContent = level;
-  document.getElementById('detAlert').textContent    = tr.alert_triggered ? '⚠ YES' : '✓ NO';
-  document.getElementById('detAlert').style.color    = tr.alert_triggered ? 'var(--red)' : 'var(--green)';
-  document.getElementById('detReqId').textContent    = data.request_id || '—';
-  document.getElementById('detBattId').textContent   = data.battery_id || '—';
-  const mv = data.model_versions || {};
-  document.getElementById('detTRModel').innerHTML  = `<span class="version-pill">${mv.tr_classifier || 'sprint3'}</span>`;
-  document.getElementById('detSoHModel').innerHTML = `<span class="version-pill">${mv.soh_tcn || 'sprint2'}</span>`;
-  document.getElementById('detLatency').textContent = (data.latency_ms || rtt).toFixed(2) + ' ms';
-  document.getElementById('detTs').textContent      = data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
-
-  // ── Input summary ──
-  const snap = data._snapshot || {};
-  document.getElementById('inp_voltage').textContent     = (snap.voltage     || 0).toFixed(3) + ' V';
-  document.getElementById('inp_current').textContent     = (snap.current     || 0).toFixed(2) + ' A';
-  document.getElementById('inp_temperature').textContent = (snap.temperature || 0).toFixed(1) + ' °C';
-  document.getElementById('inp_cycle').textContent       = snap.cycle_count  || 0;
-  const p = data._payload || {};
-  document.getElementById('inp_vmean').textContent = (p.voltage_mean  || 0).toFixed(3) + ' V';
-  document.getElementById('inp_imax').textContent  = (p.current_rms   || 0).toFixed(2) + ' A';
-  document.getElementById('inp_tmax').textContent  = (p.temp_max      || 0).toFixed(1) + ' °C';
-  document.getElementById('inp_bid').textContent   = snap.battery_id  || '—';
-
-  // ── Feature contributions (computed from inputs) ──
-  // Pass a metrics-like object that renderFeatureContributions expects
-  const m0 = {
-    voltage:     snap.voltage     || 0,
-    current:     snap.current     || 0,
-    temperature: snap.temperature || 0,
-    cycle_count: snap.cycle_count || 0,
-  };
-  renderFeatureContributions(m0, risk, level);
-
-  // ── History ──
-  const lbl = new Date().toLocaleTimeString('en', {hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const MAX = 20;
-  state.history.tr.push(risk);
-  state.history.soh.push(soh.soh);
-  state.history.lat.push(data.latency_ms || parseFloat(rtt));
-  state.history.labels.push(lbl);
-  if (state.history.tr.length > MAX) {
-    state.history.tr.shift(); state.history.soh.shift();
-    state.history.lat.shift(); state.history.labels.shift();
-  }
-  updateHistoryCharts();
-  updateSoHHistChart(state.history.soh, state.history.labels);
-
-  // ── Log ──
-  addLogEntry(data, payload, rtt, level, risk, soh);
-  document.getElementById('sysCalls').textContent = state.callCount;
-}
-
-// ─── ALERT BANNER ─────────────────────────────────────────────────────────────
-function updateAlertBanner(tr) {
-  const banner = document.getElementById('alertBanner');
-  const inner  = document.getElementById('alertBannerInner');
-  const level  = tr.risk_level;
-
-  if (!tr.alert_triggered && level === 'GREEN') {
-    banner.classList.remove('visible');
-    return;
-  }
-
-  const configs = {
-    GREEN: { bg:'var(--green-dim)', color:'var(--green)', icon:'✓', msg:'All parameters within safe limits.' },
-    AMBER: { bg:'var(--amber-dim)', color:'var(--amber)', icon:'⚠', msg:'Elevated thermal risk detected. Monitor closely. Consider reducing load or improving cooling.' },
-    RED:   { bg:'var(--red-dim)',   color:'var(--red)',   icon:'🔴', msg:'HIGH RISK — Thermal runaway probability exceeds 85%. Take immediate action. Reduce C-rate. Activate cooling.' },
-    ABORT: { bg:'var(--abort-dim)', color:'var(--abort)', icon:'⛔', msg:'ABORT — Critical thermal runaway risk > 95%. STOP charging/discharging immediately. Emergency cooling required.' },
-  };
-  const cfg = configs[level] || configs.GREEN;
-
-  banner.classList.add('visible');
-  inner.style.background = cfg.bg;
-  inner.style.borderLeft = '4px solid ' + cfg.color;
-  document.getElementById('alertIcon').textContent  = cfg.icon;
-  document.getElementById('alertLevel').textContent = '[ ' + level + ' ] THERMAL RUNAWAY ALERT';
-  document.getElementById('alertLevel').style.color = cfg.color;
-  document.getElementById('alertMsg').textContent   = cfg.msg;
-  document.getElementById('alertTs').textContent    = new Date().toLocaleTimeString();
-}
-
-// ─── TR GAUGE (canvas arc) ────────────────────────────────────────────────────
-function drawTRGauge(value, level) {
-  const canvas = document.getElementById('trGaugeCanvas');
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  const cx = w / 2, cy = h * 0.75;
-  const r = Math.min(w, h * 1.4) * 0.4;
-  const start = Math.PI, end = 0; // 180° sweep
-
-  ctx.clearRect(0, 0, w, h);
-
-  // Background arc
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, start, end, false);
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = '#1e2535';
-  ctx.lineCap = 'round';
-  ctx.stroke();
-
-  // Zone arcs
-  const zones = [
-    { pct: 0.70, color: '#00e676' },
-    { pct: 0.15, color: '#ffab00' },
-    { pct: 0.10, color: '#ff3d3d' },
-    { pct: 0.05, color: '#ff00ff' },
-  ];
-  let cumulative = 0;
-  zones.forEach(z => {
-    const zStart = start + cumulative * Math.PI;
-    const zEnd   = zStart + z.pct * Math.PI;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, zStart, zEnd, false);
-    ctx.lineWidth = 14;
-    ctx.strokeStyle = z.color;
-    ctx.globalAlpha = 0.25;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    cumulative += z.pct;
-  });
-
-  // Value arc
-  const valueAngle = start + (value / 100) * Math.PI;
-  const gradColors = { GREEN:'#00e676', AMBER:'#ffab00', RED:'#ff3d3d', ABORT:'#ff00ff' };
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, start, valueAngle, false);
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = gradColors[level] || '#5a7090';
-  ctx.lineCap = 'round';
-  ctx.shadowColor = gradColors[level] || 'transparent';
-  ctx.shadowBlur = 10;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // Needle
-  const needleAngle = valueAngle;
-  const nx = cx + (r - 8) * Math.cos(needleAngle);
-  const ny = cy + (r - 8) * Math.sin(needleAngle);
-  ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(nx, ny);
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = gradColors[level] || '#5a7090';
-  ctx.shadowBlur = 6;
-  ctx.shadowColor = gradColors[level] || 'transparent';
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // Centre dot
-  ctx.beginPath();
-  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-  ctx.fillStyle = '#1e2535';
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-  ctx.fillStyle = gradColors[level] || '#5a7090';
-  ctx.fill();
-
-  // Tick marks
-  for (let i = 0; i <= 10; i++) {
-    const angle = start + (i / 10) * Math.PI;
-    const inner = i % 5 === 0 ? r - 22 : r - 17;
-    ctx.beginPath();
-    ctx.moveTo(cx + inner * Math.cos(angle), cy + inner * Math.sin(angle));
-    ctx.lineTo(cx + (r - 12) * Math.cos(angle), cy + (r - 12) * Math.sin(angle));
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = i % 5 === 0 ? '#3a4560' : '#1e2535';
-    ctx.stroke();
-  }
-}
-
-// ─── HISTORY CHARTS ───────────────────────────────────────────────────────────
-let trHistChartInst, sohTrendChartInst, latHistChartInst, sohHistChartInst;
-
-function makeLineChart(id, label, color, fill = true) {
-  const ctx = document.getElementById(id).getContext('2d');
-  return new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [],
-      datasets: [{
-        label,
-        data: [],
-        borderColor: color,
-        backgroundColor: fill ? hexToRgba(color, 0.1) : 'transparent',
-        borderWidth: 1.5,
-        pointRadius: 2,
-        pointBackgroundColor: color,
-        tension: 0.3,
-        fill,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      animation: { duration: 200 },
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color:'#3a4560', font:{family:'Space Mono',size:8} }, grid:{color:'#0f1218'}, border:{color:'#1e2535'} },
-        y: { ticks: { color:'#3a4560', font:{family:'Space Mono',size:8} }, grid:{color:'#141820'}, border:{color:'#1e2535'} }
+    // ─── HEALTH PING ─────────────────────────────────────────────────────────────
+    async function pingHealth() {
+      const dot = document.getElementById('statusDot');
+      const txt = document.getElementById('statusText');
+      try {
+        const r = await fetch(getApiUrl() + '/health', { signal: AbortSignal.timeout(3000) });
+        if (r.ok) {
+          dot.className = 'status-dot live';
+          txt.textContent = 'LIVE';
+          state.connected = true;
+        } else {
+          dot.className = 'status-dot error';
+          txt.textContent = 'ERR ' + r.status;
+          state.connected = false;
+        }
+      } catch (e) {
+        dot.className = 'status-dot error';
+        txt.textContent = 'UNREACHABLE';
+        state.connected = false;
       }
     }
-  });
-}
 
-function makeAreaChart(id, label, color) {
-  const ctx = document.getElementById(id).getContext('2d');
-  return new Chart(ctx, {
-    type: 'line',
-    data: { labels: [], datasets: [{
-      label, data: [],
-      borderColor: color,
-      backgroundColor: hexToRgba(color, 0.15),
-      borderWidth: 1, pointRadius: 0, tension: 0.4, fill: true
-    }] },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      animation:{duration:150},
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{display:false},
-        y:{display:false, min:0, max:100}
+    // ─── AUTO-POLL ───────────────────────────────────────────────────────────────
+    function toggleAutoPoll() {
+      const on = document.getElementById('autoPoll').checked;
+      if (on) {
+        state.polling = true;
+        state.pollTimer = setInterval(runInference, 100);
+        document.getElementById('pollHz').textContent = '100ms';
+      } else {
+        state.polling = false;
+        clearInterval(state.pollTimer);
       }
     }
-  });
-}
 
-function initCharts() {
-  Chart.defaults.color = '#5a7090';
-  Chart.defaults.font.family = "'Space Mono', monospace";
+    // ─── BUILD REQUEST PAYLOAD ────────────────────────────────────────────────────
+    // Matches InferenceRequest schema in inference.py exactly:
+    // voltage_mean, current_rms, temp_max, c_rate, coulombic_efficiency,
+    // r_internal, cycle_count, soc, ambient_temp, pack_voltage
+    function buildPayload() {
+      const V = parseFloat(document.getElementById('p_voltage').value);
+      const I = parseFloat(document.getElementById('p_current').value);
+      const T = parseFloat(document.getElementById('p_temperature').value);
+      const N = parseInt(document.getElementById('p_cycle_count').value);
 
-  trHistChartInst  = makeLineChart('trHistChart',  'TR Risk %',  '#ff3d3d');
-  sohTrendChartInst= makeLineChart('sohTrendChart','SoH %',      '#00e5ff');
-  latHistChartInst = makeLineChart('latHistChart', 'Latency ms', '#ffab00', false);
-  sohHistChartInst = makeAreaChart('sohHistChart', 'SoH', '#00e5ff');
-}
+      // Derive reasonable values for fields not directly on the sliders
+      const c_rate = +(Math.abs(I) / 5.0).toFixed(3);          // approx C-rate (5Ah cell)
+      const coulombic_eff = +(0.98 - Math.max(0, (T - 40) * 0.001)).toFixed(4); // degrades with heat
+      const r_internal = +(0.05 + N * 0.0001).toFixed(4);         // rises with cycle count
+      const soc = +(Math.min(Math.max((V - 2.5) / 1.7, 0.0), 1.0)).toFixed(4); // approx SoC from V
+      const ambient_temp = +(25 + (T - 25) * 0.15).toFixed(2);                    // ambient ~ 70% of cell temp
+      const pack_voltage = +(V * 20).toFixed(2);                     // 20s pack
 
-function updateHistoryCharts() {
-  const h = state.history;
-  [trHistChartInst, sohTrendChartInst, latHistChartInst].forEach((c, i) => {
-    const ds = [h.tr, h.soh, h.lat][i];
-    c.data.labels = [...h.labels];
-    c.data.datasets[0].data = [...ds];
-    c.update('none');
-  });
-}
+      return {
+        voltage_mean: +V.toFixed(4),
+        current_rms: +Math.abs(I).toFixed(4),
+        temp_max: +T.toFixed(4),
+        c_rate,
+        coulombic_efficiency: coulombic_eff,
+        r_internal,
+        cycle_count: N,
+        soc,
+        ambient_temp,
+        pack_voltage,
+      };
+    }
 
-function updateSoHHistChart(data, labels) {
-  sohHistChartInst.data.labels = [...labels];
-  sohHistChartInst.data.datasets[0].data = [...data];
-  sohHistChartInst.update('none');
-}
+    // Keep a copy of last raw slider values for the input summary panel
+    function _lastSliderSnapshot() {
+      return {
+        voltage: parseFloat(document.getElementById('p_voltage').value),
+        current: parseFloat(document.getElementById('p_current').value),
+        temperature: parseFloat(document.getElementById('p_temperature').value),
+        cycle_count: parseInt(document.getElementById('p_cycle_count').value),
+        battery_id: document.getElementById('p_battery_id').value.trim() || 'CELL_001',
+      };
+    }
 
-// ─── FEATURE CONTRIBUTIONS ────────────────────────────────────────────────────
-function renderFeatureContributions(m, risk, level) {
-  // Derive approximate feature weights from inputs (XGBoost signal approximations)
-  // Based on known feature importance from Sprint 3: T_cell >> dT_dt >> V >> I >> cycle
-  const rawT  = Math.min(Math.max((m.temperature - 20) / 60, 0), 1);
-  const rawV  = Math.min(Math.max((4.2 - m.voltage) / 1.7, 0), 1);
-  const rawI  = Math.min(Math.max(Math.abs(m.current) / 50, 0), 1);
-  const rawN  = Math.min(Math.max(m.cycle_count / 2000, 0), 1);
-  const rawDT = rawT * 0.6 + rawV * 0.3; // dT/dt proxy
-  const total = rawT * 0.45 + rawDT * 0.25 + rawV * 0.15 + rawI * 0.1 + rawN * 0.05;
+    // ─── MAIN INFERENCE ──────────────────────────────────────────────────────────
+    async function runInference() {
+      const btn = document.getElementById('runBtn');
+      if (!state.polling) {
+        btn.disabled = true;
+        document.getElementById('loadingOverlay').classList.add('active');
+      }
 
-  const features = [
-    { name:'T_cell',  label:'Cell Temperature', weight: rawT  * 0.45 / Math.max(total,0.01), val: m.temperature.toFixed(1) + '°C', icon:'🌡' },
-    { name:'dT/dt',   label:'Thermal Rate',      weight: rawDT * 0.25 / Math.max(total,0.01), val: (rawDT * 5).toFixed(2) + '°C/s', icon:'📈' },
-    { name:'V',       label:'Voltage',            weight: rawV  * 0.15 / Math.max(total,0.01), val: m.voltage.toFixed(3) + 'V',   icon:'⚡' },
-    { name:'I',       label:'Current',            weight: rawI  * 0.10 / Math.max(total,0.01), val: Math.abs(m.current).toFixed(2) + 'A', icon:'🔌' },
-    { name:'N_cycle', label:'Cycle Count',        weight: rawN  * 0.05 / Math.max(total,0.01), val: m.cycle_count + ' cyc', icon:'🔄' },
-  ];
+      const payload = buildPayload();
+      const snapshot = _lastSliderSnapshot();
+      const headers = { 'Content-Type': 'application/json' };
+      const key = getApiKey();
+      if (key) headers['X-API-Key'] = key;
 
-  const color = levelColor(level);
-  const html = features.map(f => {
-    const pct = Math.min(f.weight * 100, 100).toFixed(0);
-    return `
+      try {
+        const t0 = performance.now();
+        const res = await fetch(getApiUrl() + '/inference', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(8000)
+        });
+        const rtt = (performance.now() - t0).toFixed(1);
+
+        if (res.status === 401) { showToast('Invalid API key — check your X-API-Key', 'error'); return; }
+        if (res.status === 422) { showToast('Validation error — check input ranges', 'error'); return; }
+        if (!res.ok) { showToast('API error: HTTP ' + res.status, 'error'); return; }
+
+        // ── Normalise API response → internal format ──────────────────────────
+        // inference.py returns: { soh, thermal_risk, tr_score, risk_level, alert, latency_ms }
+        // Map it to the shape renderResults() expects.
+        const raw = await res.json();
+
+        const trScorePct = raw.tr_score * 100;
+        const sohValue = raw.soh * 100;   // API returns 0-1 fraction; display as %
+
+        // Derive EOL and degradation from cycle_count + SoH
+        const cyclesPerPct = payload.cycle_count > 0 ? payload.cycle_count / Math.max(100 - sohValue, 0.1) : 2000;
+        const eol_cycles = Math.round(Math.max(0, (sohValue - 80) * cyclesPerPct));
+        const degradation_rate = payload.cycle_count > 0 ? (100 - sohValue) / Math.max(payload.cycle_count, 1) : 0;
+
+        const data = {
+          request_id: raw.request_id || ('REQ-' + Date.now()),
+          battery_id: snapshot.battery_id,
+          timestamp: new Date().toISOString(),
+          latency_ms: raw.latency_ms,
+          model_versions: { tr_classifier: 'sprint3', soh_tcn: 'sprint2' },
+          tr_prediction: {
+            risk_score: trScorePct,
+            risk_level: raw.risk_level,
+            confidence: raw.tr_score,           // confidence = TR danger score (0=safe, 1=danger)
+            alert_triggered: raw.alert,
+            thermal_risk: raw.thermal_risk,
+          },
+          soh_prediction: {
+            soh: sohValue,
+            eol_cycles: eol_cycles,
+            degradation_rate: degradation_rate,
+          },
+          // Keep raw payload reference for input summary panel
+          _payload: payload,
+          _snapshot: snapshot,
+        };
+
+        state.callCount++;
+        document.getElementById('statusDot').className = 'status-dot live';
+        document.getElementById('statusText').textContent = 'LIVE';
+        state.connected = true;
+
+        renderResults(data, snapshot, parseFloat(rtt));
+
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          showToast('Connection failed: ' + e.message, 'error');
+          document.getElementById('statusDot').className = 'status-dot error';
+          document.getElementById('statusText').textContent = 'ERROR';
+        }
+      } finally {
+        if (!state.polling) {
+          btn.disabled = false;
+          document.getElementById('loadingOverlay').classList.remove('active');
+        }
+      }
+    }
+
+    // ─── RENDER RESULTS ───────────────────────────────────────────────────────────
+    function renderResults(data, payload, rtt) {
+      const tr = data.tr_prediction;
+      const soh = data.soh_prediction;
+      const risk = tr.risk_score;
+      const level = tr.risk_level;
+
+      // ── Alert banner ──
+      updateAlertBanner(tr);
+
+      // ── KPI strip ──
+      setKPI('kpiTR', risk.toFixed(1));
+      setKPI('kpiSoH', soh.soh.toFixed(1));
+      setKPI('kpiEOL', soh.eol_cycles.toLocaleString());
+      setKPI('kpiDeg', soh.degradation_rate.toFixed(4));
+      setKPI('kpiConf', (tr.confidence * 100).toFixed(1));
+      setKPI('kpiLat', (data.latency_ms || rtt).toFixed(2));
+      document.getElementById('kpiTRLevel').textContent = level;
+      document.getElementById('kpiSoHStatus').textContent = soh.soh >= 80 ? 'GOOD' : soh.soh >= 60 ? 'DEGRADED' : 'CRITICAL';
+
+      // ── TR Gauge ──
+      drawTRGauge(risk, level);
+      document.getElementById('trGaugeVal').textContent = risk.toFixed(1);
+      document.getElementById('trGaugeVal').style.color = levelColor(level);
+
+      const badge = document.getElementById('trBadge');
+      badge.textContent = level;
+      badge.className = 'gauge-badge level-' + level.toLowerCase();
+
+      // ── TR zone bars ──
+      const trNorm = Math.min(risk, 100);
+      document.getElementById('zoneGreen').style.width = Math.min(trNorm / 70 * 100, 100) + '%';
+      document.getElementById('zoneAmber').style.width = trNorm >= 70 ? Math.min((trNorm - 70) / 15 * 100, 100) + '%' : '0%';
+      document.getElementById('zoneRed').style.width = trNorm >= 85 ? Math.min((trNorm - 85) / 10 * 100, 100) + '%' : '0%';
+      document.getElementById('zoneAbort').style.width = trNorm >= 95 ? Math.min((trNorm - 95) / 5 * 100, 100) + '%' : '0%';
+
+      // ── SoH bar ──
+      const sohPct = Math.min(soh.soh, 100);
+      const sohColor = sohPct >= 80 ? 'var(--cyan)' : sohPct >= 60 ? 'var(--amber)' : 'var(--red)';
+      document.getElementById('sohBarFill').style.width = sohPct + '%';
+      document.getElementById('sohBarFill').style.background = sohColor;
+      document.getElementById('sohBarLabel').textContent = soh.soh.toFixed(1) + '%';
+
+      const sohBadge = document.getElementById('sohBadge');
+      sohBadge.textContent = sohPct >= 80 ? 'HEALTHY' : sohPct >= 60 ? 'DEGRADED' : 'CRITICAL';
+      sohBadge.className = 'gauge-badge ' + (sohPct >= 80 ? 'level-green' : sohPct >= 60 ? 'level-amber' : 'level-red');
+
+      // ── SoH detail bars ──
+      document.getElementById('sohNowBar').style.width = sohPct + '%';
+      document.getElementById('sohNowVal').textContent = soh.soh.toFixed(1) + '%';
+      document.getElementById('degBar').style.width = Math.min(soh.degradation_rate * 1000, 100) + '%';
+      document.getElementById('degVal').textContent = soh.degradation_rate.toFixed(4);
+      document.getElementById('eolBar').style.width = Math.min(soh.eol_cycles / 50, 100) + '%';
+      document.getElementById('eolVal').textContent = soh.eol_cycles.toLocaleString();
+
+      // ── Model detail ──
+      document.getElementById('detConf').textContent = (tr.confidence * 100).toFixed(1) + '%';
+      document.getElementById('confBar').style.width = (tr.confidence * 100) + '%';
+      document.getElementById('confBar').style.background = tr.confidence > 0.85 ? 'var(--green)' : 'var(--amber)';
+      document.getElementById('detRiskLevel').textContent = level;
+      document.getElementById('detAlert').textContent = tr.alert_triggered ? '⚠ YES' : '✓ NO';
+      document.getElementById('detAlert').style.color = tr.alert_triggered ? 'var(--red)' : 'var(--green)';
+      document.getElementById('detReqId').textContent = data.request_id || '—';
+      document.getElementById('detBattId').textContent = data.battery_id || '—';
+      const mv = data.model_versions || {};
+      document.getElementById('detTRModel').innerHTML = `<span class="version-pill">${mv.tr_classifier || 'sprint3'}</span>`;
+      document.getElementById('detSoHModel').innerHTML = `<span class="version-pill">${mv.soh_tcn || 'sprint2'}</span>`;
+      document.getElementById('detLatency').textContent = (data.latency_ms || rtt).toFixed(2) + ' ms';
+      document.getElementById('detTs').textContent = data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
+
+      // ── Input summary ──
+      const snap = data._snapshot || {};
+      document.getElementById('inp_voltage').textContent = (snap.voltage || 0).toFixed(3) + ' V';
+      document.getElementById('inp_current').textContent = (snap.current || 0).toFixed(2) + ' A';
+      document.getElementById('inp_temperature').textContent = (snap.temperature || 0).toFixed(1) + ' °C';
+      document.getElementById('inp_cycle').textContent = snap.cycle_count || 0;
+      const p = data._payload || {};
+      document.getElementById('inp_vmean').textContent = (p.voltage_mean || 0).toFixed(3) + ' V';
+      document.getElementById('inp_imax').textContent = (p.current_rms || 0).toFixed(2) + ' A';
+      document.getElementById('inp_tmax').textContent = (p.temp_max || 0).toFixed(1) + ' °C';
+      document.getElementById('inp_bid').textContent = snap.battery_id || '—';
+
+      // ── Feature contributions (computed from inputs) ──
+      // Pass a metrics-like object that renderFeatureContributions expects
+      const m0 = {
+        voltage: snap.voltage || 0,
+        current: snap.current || 0,
+        temperature: snap.temperature || 0,
+        cycle_count: snap.cycle_count || 0,
+      };
+      renderFeatureContributions(m0, risk, level);
+
+      // ── History ──
+      const lbl = new Date().toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const MAX = 20;
+      state.history.tr.push(risk);
+      state.history.soh.push(soh.soh);
+      state.history.lat.push(data.latency_ms || parseFloat(rtt));
+      state.history.labels.push(lbl);
+      if (state.history.tr.length > MAX) {
+        state.history.tr.shift(); state.history.soh.shift();
+        state.history.lat.shift(); state.history.labels.shift();
+      }
+      updateHistoryCharts();
+      updateSoHHistChart(state.history.soh, state.history.labels);
+
+      // ── Log ──
+      addLogEntry(data, payload, rtt, level, risk, soh);
+      document.getElementById('sysCalls').textContent = state.callCount;
+    }
+
+    // ─── ALERT BANNER ─────────────────────────────────────────────────────────────
+    function updateAlertBanner(tr) {
+      const banner = document.getElementById('alertBanner');
+      const inner = document.getElementById('alertBannerInner');
+      const level = tr.risk_level;
+
+      if (!tr.alert_triggered && level === 'GREEN') {
+        banner.classList.remove('visible');
+        return;
+      }
+
+      const configs = {
+        GREEN: { bg: 'var(--green-dim)', color: 'var(--green)', icon: '✓', msg: 'All parameters within safe limits.' },
+        AMBER: { bg: 'var(--amber-dim)', color: 'var(--amber)', icon: '⚠', msg: 'Elevated thermal risk detected. Monitor closely. Consider reducing load or improving cooling.' },
+        RED: { bg: 'var(--red-dim)', color: 'var(--red)', icon: '🔴', msg: 'HIGH RISK — Thermal runaway probability exceeds 85%. Take immediate action. Reduce C-rate. Activate cooling.' },
+        ABORT: { bg: 'var(--abort-dim)', color: 'var(--abort)', icon: '⛔', msg: 'ABORT — Critical thermal runaway risk > 95%. STOP charging/discharging immediately. Emergency cooling required.' },
+      };
+      const cfg = configs[level] || configs.GREEN;
+
+      banner.classList.add('visible');
+      inner.style.background = cfg.bg;
+      inner.style.borderLeft = '4px solid ' + cfg.color;
+      document.getElementById('alertIcon').textContent = cfg.icon;
+      document.getElementById('alertLevel').textContent = '[ ' + level + ' ] THERMAL RUNAWAY ALERT';
+      document.getElementById('alertLevel').style.color = cfg.color;
+      document.getElementById('alertMsg').textContent = cfg.msg;
+      document.getElementById('alertTs').textContent = new Date().toLocaleTimeString();
+    }
+
+    // ─── TR GAUGE (canvas arc) ────────────────────────────────────────────────────
+    function drawTRGauge(value, level) {
+      const canvas = document.getElementById('trGaugeCanvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      const cx = w / 2, cy = h * 0.75;
+      const r = Math.min(w, h * 1.4) * 0.4;
+      const start = Math.PI, end = 0; // 180° sweep
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background arc
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start, end, false);
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = '#1e2535';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // Zone arcs
+      const zones = [
+        { pct: 0.70, color: '#00e676' },
+        { pct: 0.15, color: '#ffab00' },
+        { pct: 0.10, color: '#ff3d3d' },
+        { pct: 0.05, color: '#ff00ff' },
+      ];
+      let cumulative = 0;
+      zones.forEach(z => {
+        const zStart = start + cumulative * Math.PI;
+        const zEnd = zStart + z.pct * Math.PI;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, zStart, zEnd, false);
+        ctx.lineWidth = 14;
+        ctx.strokeStyle = z.color;
+        ctx.globalAlpha = 0.25;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        cumulative += z.pct;
+      });
+
+      // Value arc
+      const valueAngle = start + (value / 100) * Math.PI;
+      const gradColors = { GREEN: '#00e676', AMBER: '#ffab00', RED: '#ff3d3d', ABORT: '#ff00ff' };
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start, valueAngle, false);
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = gradColors[level] || '#5a7090';
+      ctx.lineCap = 'round';
+      ctx.shadowColor = gradColors[level] || 'transparent';
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Needle
+      const needleAngle = valueAngle;
+      const nx = cx + (r - 8) * Math.cos(needleAngle);
+      const ny = cy + (r - 8) * Math.sin(needleAngle);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(nx, ny);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = gradColors[level] || '#5a7090';
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = gradColors[level] || 'transparent';
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Centre dot
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e2535';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fillStyle = gradColors[level] || '#5a7090';
+      ctx.fill();
+
+      // Tick marks
+      for (let i = 0; i <= 10; i++) {
+        const angle = start + (i / 10) * Math.PI;
+        const inner = i % 5 === 0 ? r - 22 : r - 17;
+        ctx.beginPath();
+        ctx.moveTo(cx + inner * Math.cos(angle), cy + inner * Math.sin(angle));
+        ctx.lineTo(cx + (r - 12) * Math.cos(angle), cy + (r - 12) * Math.sin(angle));
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = i % 5 === 0 ? '#3a4560' : '#1e2535';
+        ctx.stroke();
+      }
+    }
+
+    // ─── HISTORY CHARTS ───────────────────────────────────────────────────────────
+    let trHistChartInst, sohTrendChartInst, latHistChartInst, sohHistChartInst;
+
+    function makeLineChart(id, label, color, fill = true) {
+      const ctx = document.getElementById(id).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label,
+            data: [],
+            borderColor: color,
+            backgroundColor: fill ? hexToRgba(color, 0.1) : 'transparent',
+            borderWidth: 1.5,
+            pointRadius: 2,
+            pointBackgroundColor: color,
+            tension: 0.3,
+            fill,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          animation: { duration: 200 },
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#3a4560', font: { family: 'Space Mono', size: 8 } }, grid: { color: '#0f1218' }, border: { color: '#1e2535' } },
+            y: { ticks: { color: '#3a4560', font: { family: 'Space Mono', size: 8 } }, grid: { color: '#141820' }, border: { color: '#1e2535' } }
+          }
+        }
+      });
+    }
+
+    function makeAreaChart(id, label, color) {
+      const ctx = document.getElementById(id).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [], datasets: [{
+            label, data: [],
+            borderColor: color,
+            backgroundColor: hexToRgba(color, 0.15),
+            borderWidth: 1, pointRadius: 0, tension: 0.4, fill: true
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          animation: { duration: 150 },
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: false },
+            y: { display: false, min: 0, max: 100 }
+          }
+        }
+      });
+    }
+
+    function initCharts() {
+      Chart.defaults.color = '#5a7090';
+      Chart.defaults.font.family = "'Space Mono', monospace";
+
+      trHistChartInst = makeLineChart('trHistChart', 'TR Risk %', '#ff3d3d');
+      sohTrendChartInst = makeLineChart('sohTrendChart', 'SoH %', '#00e5ff');
+      latHistChartInst = makeLineChart('latHistChart', 'Latency ms', '#ffab00', false);
+      sohHistChartInst = makeAreaChart('sohHistChart', 'SoH', '#00e5ff');
+    }
+
+    function updateHistoryCharts() {
+      const h = state.history;
+      [trHistChartInst, sohTrendChartInst, latHistChartInst].forEach((c, i) => {
+        const ds = [h.tr, h.soh, h.lat][i];
+        c.data.labels = [...h.labels];
+        c.data.datasets[0].data = [...ds];
+        c.update('none');
+      });
+    }
+
+    function updateSoHHistChart(data, labels) {
+      sohHistChartInst.data.labels = [...labels];
+      sohHistChartInst.data.datasets[0].data = [...data];
+      sohHistChartInst.update('none');
+    }
+
+    // ─── FEATURE CONTRIBUTIONS ────────────────────────────────────────────────────
+    function renderFeatureContributions(m, risk, level) {
+      // Derive approximate feature weights from inputs (XGBoost signal approximations)
+      // Based on known feature importance from Sprint 3: T_cell >> dT_dt >> V >> I >> cycle
+      const rawT = Math.min(Math.max((m.temperature - 20) / 60, 0), 1);
+      const rawV = Math.min(Math.max((4.2 - m.voltage) / 1.7, 0), 1);
+      const rawI = Math.min(Math.max(Math.abs(m.current) / 50, 0), 1);
+      const rawN = Math.min(Math.max(m.cycle_count / 2000, 0), 1);
+      const rawDT = rawT * 0.6 + rawV * 0.3; // dT/dt proxy
+      const total = rawT * 0.45 + rawDT * 0.25 + rawV * 0.15 + rawI * 0.1 + rawN * 0.05;
+
+      const features = [
+        { name: 'T_cell', label: 'Cell Temperature', weight: rawT * 0.45 / Math.max(total, 0.01), val: m.temperature.toFixed(1) + '°C', icon: '🌡' },
+        { name: 'dT/dt', label: 'Thermal Rate', weight: rawDT * 0.25 / Math.max(total, 0.01), val: (rawDT * 5).toFixed(2) + '°C/s', icon: '📈' },
+        { name: 'V', label: 'Voltage', weight: rawV * 0.15 / Math.max(total, 0.01), val: m.voltage.toFixed(3) + 'V', icon: '⚡' },
+        { name: 'I', label: 'Current', weight: rawI * 0.10 / Math.max(total, 0.01), val: Math.abs(m.current).toFixed(2) + 'A', icon: '🔌' },
+        { name: 'N_cycle', label: 'Cycle Count', weight: rawN * 0.05 / Math.max(total, 0.01), val: m.cycle_count + ' cyc', icon: '🔄' },
+      ];
+
+      const color = levelColor(level);
+      const html = features.map(f => {
+        const pct = Math.min(f.weight * 100, 100).toFixed(0);
+        return `
       <div class="stat-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
         <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
           <span class="stat-key">${f.icon} ${f.label} (${f.name})</span>
@@ -1937,32 +2410,32 @@ function renderFeatureContributions(m, risk, level) {
           <span style="font-family:'Space Mono',monospace;font-size:10px;color:${color};font-weight:700;width:36px;text-align:right">${pct}%</span>
         </div>
       </div>`;
-  }).join('');
-  document.getElementById('featureList').innerHTML = html;
-}
+      }).join('');
+      document.getElementById('featureList').innerHTML = html;
+    }
 
-// ─── LOG TABLE ────────────────────────────────────────────────────────────────
-function addLogEntry(data, payload, rtt, level, risk, soh) {
-  const entry = {
-    seq:    state.callCount,
-    time:   new Date().toLocaleTimeString(),
-    bid:    payload.battery_id,
-    risk:   risk.toFixed(1),
-    level,
-    soh:    soh.soh.toFixed(1),
-    deg:    soh.degradation_rate.toFixed(4),
-    eol:    soh.eol_cycles,
-    conf:   (data.tr_prediction.confidence * 100).toFixed(1),
-    lat:    (data.latency_ms || rtt).toFixed(2),
-    alert:  data.tr_prediction.alert_triggered,
-  };
-  state.log.unshift(entry);
-  if (state.log.length > 100) state.log.pop();
+    // ─── LOG TABLE ────────────────────────────────────────────────────────────────
+    function addLogEntry(data, payload, rtt, level, risk, soh) {
+      const entry = {
+        seq: state.callCount,
+        time: new Date().toLocaleTimeString(),
+        bid: payload.battery_id,
+        risk: risk.toFixed(1),
+        level,
+        soh: soh.soh.toFixed(1),
+        deg: soh.degradation_rate.toFixed(4),
+        eol: soh.eol_cycles,
+        conf: (data.tr_prediction.confidence * 100).toFixed(1),
+        lat: (data.latency_ms || rtt).toFixed(2),
+        alert: data.tr_prediction.alert_triggered,
+      };
+      state.log.unshift(entry);
+      if (state.log.length > 100) state.log.pop();
 
-  const colorClass = { GREEN:'td-green', AMBER:'td-amber', RED:'td-red', ABORT:'td-abort' }[level] || '';
-  const tbody = document.getElementById('logTableBody');
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
+      const colorClass = { GREEN: 'td-green', AMBER: 'td-amber', RED: 'td-red', ABORT: 'td-abort' }[level] || '';
+      const tbody = document.getElementById('logTableBody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
     <td>${entry.seq}</td>
     <td>${entry.time}</td>
     <td>${entry.bid}</td>
@@ -1975,59 +2448,60 @@ function addLogEntry(data, payload, rtt, level, risk, soh) {
     <td class="${parseFloat(entry.lat) < 5 ? 'td-green' : 'td-amber'}">${entry.lat}</td>
     <td>${entry.alert ? '<span style="color:var(--red);font-weight:700">⚠ YES</span>' : '<span style="color:var(--text-dim)">—</span>'}</td>
   `;
-  if (tbody.querySelector('.log-empty')) tbody.innerHTML = '';
-  tbody.prepend(tr);
-  if (tbody.children.length > 50) tbody.removeChild(tbody.lastChild);
-  document.getElementById('logCount').textContent = state.log.length + ' entries';
-}
+      if (tbody.querySelector('.log-empty')) tbody.innerHTML = '';
+      tbody.prepend(tr);
+      if (tbody.children.length > 50) tbody.removeChild(tbody.lastChild);
+      document.getElementById('logCount').textContent = state.log.length + ' entries';
+    }
 
-function clearLog() {
-  state.log = [];
-  document.getElementById('logTableBody').innerHTML = '<tr><td colspan="11" class="log-empty">Log cleared</td></tr>';
-  document.getElementById('logCount').textContent = '0 entries';
-}
+    function clearLog() {
+      state.log = [];
+      document.getElementById('logTableBody').innerHTML = '<tr><td colspan="11" class="log-empty">Log cleared</td></tr>';
+      document.getElementById('logCount').textContent = '0 entries';
+    }
 
-// ─── UTILITIES ─────────────────────────────────────────────────────────────────
-function setKPI(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
+    // ─── UTILITIES ─────────────────────────────────────────────────────────────────
+    function setKPI(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    }
 
-function levelColor(level) {
-  return { GREEN:'#00e676', AMBER:'#ffab00', RED:'#ff3d3d', ABORT:'#ff00ff' }[level] || '#5a7090';
-}
+    function levelColor(level) {
+      return { GREEN: '#00e676', AMBER: '#ffab00', RED: '#ff3d3d', ABORT: '#ff00ff' }[level] || '#5a7090';
+    }
 
-function hexToRgba(hex, alpha) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
+    function hexToRgba(hex, alpha) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
 
-function showToast(msg, type='error') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.borderColor = type === 'error' ? 'var(--red)' : type === 'info' ? 'var(--amber)' : 'var(--green)';
-  t.style.color       = type === 'error' ? 'var(--red)' : type === 'info' ? 'var(--amber)' : 'var(--green)';
-  t.classList.add('visible');
-  setTimeout(() => t.classList.remove('visible'), 3000);
-}
+    function showToast(msg, type = 'error') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.borderColor = type === 'error' ? 'var(--red)' : type === 'info' ? 'var(--amber)' : 'var(--green)';
+      t.style.color = type === 'error' ? 'var(--red)' : type === 'info' ? 'var(--amber)' : 'var(--green)';
+      t.classList.add('visible');
+      setTimeout(() => t.classList.remove('visible'), 3000);
+    }
 
-// ─── CLOCK ───────────────────────────────────────────────────────────────────
-function updateClock() {
-  document.getElementById('clock').textContent =
-    new Date().toLocaleTimeString('en-GB', { hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
-}
-setInterval(updateClock, 1000);
-updateClock();
+    // ─── CLOCK ───────────────────────────────────────────────────────────────────
+    function updateClock() {
+      document.getElementById('clock').textContent =
+        new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  initCharts();
-  pingHealth();
-  // Draw initial blank TR gauge
-  drawTRGauge(0, 'GREEN');
-});
-</script>
+    // ─── INIT ─────────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      pingHealth();
+      // Draw initial blank TR gauge
+      drawTRGauge(0, 'GREEN');
+    });
+  </script>
 </body>
+
 </html>
